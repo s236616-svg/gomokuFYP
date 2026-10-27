@@ -1,0 +1,10 @@
+{
+  "description": "An interactive platform teaching Cantonese and Gomoku with AI opponents, tutorials, and challenges, supporting bilingual UI and light/dark modes for all ages.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

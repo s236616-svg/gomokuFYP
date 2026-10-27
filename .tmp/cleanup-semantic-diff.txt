@@ -1,0 +1,3102 @@
+--- semantic diff stat (ignoring whitespace) ---
+ src/App.tsx    | 2335 ++++++++++++++++++++++++++++++++++++++++++++------------
+ src/main.tsx   |   10 +-
+ vite.config.ts |  231 +++---
+ 3 files changed, 2009 insertions(+), 567 deletions(-)
+--- semantic diff ---
+diff --git a/src/App.tsx b/src/App.tsx
+index ec87417..0b6ccf8 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,30 +1,7 @@
+-import { useEffect, useMemo, useState } from "react";
++import { useEffect, useState } from "react"
+ 
+-type Lang = "zh" | "en";
+-type Theme = "light" | "dark";
+-type Page =
+-  | "login"
+-  | "home"
+-  | "lessons"
+-  | "lesson"
+-  | "challenge"
+-  | "game"
+-  | "leaderboard"
+-  | "profile"
+-  | "settings";
+-type Modal =
+-  | "signup"
+-  | "forgot"
+-  | "logout"
+-  | "setup"
+-  | "hint"
+-  | "undo"
+-  | "restart"
+-  | "leave"
+-  | "correct"
+-  | "incorrect"
+-  | "challengeFail"
+-  | "complete"
+-  | "record"
+-  | null;
++type Lang = "zh" | "en"
++type Theme = "light" | "dark"
++type Page = "login" | "home" | "lessons" | "lesson" | "challenge" | "game" | "leaderboard" | "profile" | "settings"
++type Modal = "signup" | "forgot" | "logout" | "setup" | "hint" | "undo" | "restart" | "leave" | "correct" | "incorrect" | "challengeFail" | "complete" | "record" | null
+ 
+@@ -33,3 +10,2 @@ const copy = {
+     brand: "棋趣",
+-    fullBrand: "廣東話教學智慧五子棋對弈平台",
+     shortBrand: "廣東話智慧五子棋",
+@@ -76,4 +52,2 @@ const copy = {
+     createAccount: "建立帳戶",
+-    learnMore: "了解更多",
+-    viewAll: "查看全部",
+     greeting: "早晨，棋友！",
+@@ -99,3 +73,2 @@ const copy = {
+     backLessons: "返回教學目錄",
+-    pause: "暫停",
+     hint: "提示",
+@@ -158,3 +131,2 @@ const copy = {
+     result: "結果",
+-    date: "日期",
+     won: "勝出",
+@@ -162,3 +134,2 @@ const copy = {
+     draw: "和棋",
+-    viewRecord: "查看棋譜",
+     accountSettings: "帳戶及聲音設定",
+@@ -209,3 +180,4 @@ const copy = {
+     challengeFailTitle: "已為你拆解棋局",
+-    challengeFailBody: "白棋的威脅在 E8，黑棋必須立即封住這個位置。你可以先到一般遊玩熟習攻防策略，再回來挑戰。",
++    challengeFailBody:
++      "白棋的威脅在 E8，黑棋必須立即封住這個位置。你可以先到一般遊玩熟習攻防策略，再回來挑戰。",
+     tryAgain: "再試一次",
+@@ -221,3 +193,2 @@ const copy = {
+     brand: "Gomoku Joy",
+-    fullBrand: "Cantonese Teaching and Intelligent Gomoku Playing Platform",
+     shortBrand: "Cantonese Intelligent Gomoku",
+@@ -263,6 +234,5 @@ const copy = {
+     streak: "4-day learning streak",
+-    createPrompt: "Create a free account to keep your learning progress and game records.",
++    createPrompt:
++      "Create a free account to keep your learning progress and game records.",
+     createAccount: "Create Account",
+-    learnMore: "Learn more",
+-    viewAll: "View all",
+     greeting: "Good morning, player!",
+@@ -271,3 +241,4 @@ const copy = {
+     lessonPath: "Your learning path",
+-    lessonPathSub: "Each lesson takes 3–5 minutes. There is no timer, so learn at your own pace.",
++    lessonPathSub:
++      "Each lesson takes 3–5 minutes. There is no timer, so learn at your own pace.",
+     cantoneseNarration: "Cantonese narration",
+@@ -282,3 +253,4 @@ const copy = {
+       "An open three is a row of three stones with both ends free. Your opponent will usually need to defend at once.",
+-    instruction: "Place a black stone on the glowing point to complete an open three.",
++    instruction:
++      "Place a black stone on the glowing point to complete an open three.",
+     step: "Step 2 of 3",
+@@ -288,3 +260,2 @@ const copy = {
+     backLessons: "Back to Lessons",
+-    pause: "Pause",
+     hint: "Hint",
+@@ -293,3 +264,4 @@ const copy = {
+     challenge: "Board Challenge",
+-    challengeObjective: "Find the move that prevents your opponent from winning",
++    challengeObjective:
++      "Find the move that prevents your opponent from winning",
+     challengeHint: "Cantonese Hint",
+@@ -330,3 +302,4 @@ const copy = {
+     rankingTitle: "Player Leaderboard",
+-    rankingSub: "Play with the Hong Kong community and see who is strongest this week.",
++    rankingSub:
++      "Play with the Hong Kong community and see who is strongest this week.",
+     overall: "Overall",
+@@ -347,3 +320,2 @@ const copy = {
+     result: "Result",
+-    date: "Date",
+     won: "Won",
+@@ -351,3 +323,2 @@ const copy = {
+     draw: "Draw",
+-    viewRecord: "View Record",
+     accountSettings: "Account & sound settings",
+@@ -365,3 +336,4 @@ const copy = {
+     tts: "Cantonese teaching narration",
+-    ttsNote: "Cantonese narration remains available in either interface language.",
++    ttsNote:
++      "Cantonese narration remains available in either interface language.",
+     save: "Save Settings",
+@@ -383,6 +355,8 @@ const copy = {
+     hintTitle: "Ah Kei’s Hint",
+-    hintBody: "Play at H8 to form an open three and force your opponent to defend.",
++    hintBody:
++      "Play at H8 to form an open three and force your opponent to defend.",
+     gotIt: "Got It",
+     undoTitle: "Undo the last move?",
+-    undoBody: "In an AI game, your last move and the AI’s last move will both be undone.",
++    undoBody:
++      "In an AI game, your last move and the AI’s last move will both be undone.",
+     restartTitle: "Restart this game?",
+@@ -394,7 +368,10 @@ const copy = {
+     correctTitle: "Great move!",
+-    correctBody: "You completed an open three. Your opponent now has to defend.",
++    correctBody:
++      "You completed an open three. Your opponent now has to defend.",
+     incorrectTitle: "Nearly there—try again!",
+-    incorrectBody: "That point does not create an open three. Remember to keep both ends open.",
++    incorrectBody:
++      "That point does not create an open three. Remember to keep both ends open.",
+     challengeFailTitle: "Let’s break down the position",
+-    challengeFailBody: "White’s threat is at E8, so Black must block it immediately. Practise attack and defence in Free Play, then return for another try.",
++    challengeFailBody:
++      "White’s threat is at E8, so Black must block it immediately. Practise attack and defence in Free Play, then return for another try.",
+     tryAgain: "Try Again",
+@@ -402,3 +379,4 @@ const copy = {
+     finishTitle: "Tutorial Complete!",
+-    finishBody: "You passed both board challenges and mastered the foundations of Gomoku attack and defence.",
++    finishBody:
++      "You passed both board challenges and mastered the foundations of Gomoku attack and defence.",
+     freePlay: "Start Free Play",
+@@ -408,28 +386,117 @@ const copy = {
+   },
+-} as const;
++} as const
+ 
+ const iconPaths: Record<string, React.ReactNode> = {
+-  home: <><path d="M3 10.8 12 3l9 7.8" /><path d="M5.5 9.5V21h13V9.5M9 21v-7h6v7" /></>,
+-  book: <><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v17H7.5A3.5 3.5 0 0 0 4 22.5z" /><path d="M4 5.5v17M8 6h8M8 10h7" /></>,
+-  play: <><circle cx="12" cy="12" r="9" /><path d="m10 8 6 4-6 4z" /></>,
+-  trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0zM10 13v4M14 13v4M7 21h10M9 17h6" /><path d="M8 6H4v2a4 4 0 0 0 4 4M16 6h4v2a4 4 0 0 1-4 4" /></>,
+-  user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+-  settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" /></>,
++  home: (
++    <>
++      <path d="M3 10.8 12 3l9 7.8" />
++      <path d="M5.5 9.5V21h13V9.5M9 21v-7h6v7" />
++    </>
++  ),
++  book: (
++    <>
++      <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v17H7.5A3.5 3.5 0 0 0 4 22.5z" />
++      <path d="M4 5.5v17M8 6h8M8 10h7" />
++    </>
++  ),
++  play: (
++    <>
++      <circle cx="12" cy="12" r="9" />
++      <path d="m10 8 6 4-6 4z" />
++    </>
++  ),
++  trophy: (
++    <>
++      <path d="M8 4h8v5a4 4 0 0 1-8 0zM10 13v4M14 13v4M7 21h10M9 17h6" />
++      <path d="M8 6H4v2a4 4 0 0 0 4 4M16 6h4v2a4 4 0 0 1-4 4" />
++    </>
++  ),
++  user: (
++    <>
++      <circle cx="12" cy="8" r="4" />
++      <path d="M4 21a8 8 0 0 1 16 0" />
++    </>
++  ),
++  settings: (
++    <>
++      <circle cx="12" cy="12" r="3" />
++      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
++    </>
++  ),
+   moon: <path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z" />,
+-  sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
+-  globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
+-  arrow: <><path d="m9 18 6-6-6-6" /></>,
+-  back: <><path d="m15 18-6-6 6-6" /></>,
+-  sound: <><path d="M5 10v4h3l4 4V6L8 10zM16 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12" /></>,
+-  bulb: <><path d="M9 18h6M10 22h4M8.5 14.5A6 6 0 1 1 15.5 14.5L14 17h-4z" /></>,
+-  undo: <><path d="m9 7-5 5 5 5" /><path d="M4 12h9a6 6 0 0 1 6 6" /></>,
+-  refresh: <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6.1 8a7 7 0 0 1 11.5-2.6L20 8M4 16l2.4 2.6A7 7 0 0 0 17.9 16" /></>,
+-  flag: <><path d="M5 22V3M5 4h12l-2 4 2 4H5" /></>,
++  sun: (
++    <>
++      <circle cx="12" cy="12" r="4" />
++      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
++    </>
++  ),
++  globe: (
++    <>
++      <circle cx="12" cy="12" r="9" />
++      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
++    </>
++  ),
++  arrow: (
++    <>
++      <path d="m9 18 6-6-6-6" />
++    </>
++  ),
++  back: (
++    <>
++      <path d="m15 18-6-6 6-6" />
++    </>
++  ),
++  sound: (
++    <>
++      <path d="M5 10v4h3l4 4V6L8 10zM16 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12" />
++    </>
++  ),
++  bulb: (
++    <>
++      <path d="M9 18h6M10 22h4M8.5 14.5A6 6 0 1 1 15.5 14.5L14 17h-4z" />
++    </>
++  ),
++  undo: (
++    <>
++      <path d="m9 7-5 5 5 5" />
++      <path d="M4 12h9a6 6 0 0 1 6 6" />
++    </>
++  ),
++  refresh: (
++    <>
++      <path d="M20 7v5h-5M4 17v-5h5" />
++      <path d="M6.1 8a7 7 0 0 1 11.5-2.6L20 8M4 16l2.4 2.6A7 7 0 0 0 17.9 16" />
++    </>
++  ),
++  flag: (
++    <>
++      <path d="M5 22V3M5 4h12l-2 4 2 4H5" />
++    </>
++  ),
+   check: <path d="m5 12 4 4L19 6" />,
+-  lock: <><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>,
+-  eye: <><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></>,
+-  close: <><path d="m6 6 12 12M18 6 6 18" /></>,
+-};
++  lock: (
++    <>
++      <rect x="5" y="10" width="14" height="11" rx="2" />
++      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
++    </>
++  ),
++  eye: (
++    <>
++      <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z" />
++      <circle cx="12" cy="12" r="2.5" />
++    </>
++  ),
++  close: (
++    <>
++      <path d="m6 6 12 12M18 6 6 18" />
++    </>
++  ),
++}
++
++type IconProps = {
++  name: string
++  size?: number
++}
+ 
+-function Icon({ name, size = 20 }: { name: string; size?: number }) {
++function Icon({ name, size = 20 }: IconProps) {
+   return (
+@@ -448,3 +515,3 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
+     </svg>
+-  );
++  )
+ }
+@@ -453,3 +520,6 @@ function Panda({ small = false }: { small?: boolean }) {
+   return (
+-    <div className={`panda ${small ? "panda-small" : ""}`} aria-label="Ah Kei panda mascot">
++    <div
++      className={`panda ${small ? "panda-small" : ""}`}
++      aria-label="Ah Kei panda mascot"
++    >
+       <div className="panda-ear ear-left" />
+@@ -457,13 +527,21 @@ function Panda({ small = false }: { small?: boolean }) {
+       <div className="panda-head">
+-        <div className="panda-eye eye-left"><i /></div>
+-        <div className="panda-eye eye-right"><i /></div>
+-        <div className="panda-muzzle"><i /></div>
++        <div className="panda-eye eye-left">
++          <i />
++        </div>
++        <div className="panda-eye eye-right">
++          <i />
++        </div>
++        <div className="panda-muzzle">
++          <i />
++        </div>
+       </div>
+-      <div className="panda-body"><div className="panda-stone" /></div>
++      <div className="panda-body">
++        <div className="panda-stone" />
+       </div>
+-  );
++    </div>
++  )
+ }
+ 
+-function Logo({ text = true, compact = false, lang }: { text?: boolean; compact?: boolean; lang: Lang }) {
+-  const t = copy[lang];
++function Logo({ lang }: { lang: Lang }) {
++  const t = copy[lang]
+   return (
+@@ -471,12 +549,12 @@ function Logo({ text = true, compact = false, lang }: { text?: boolean; compact?
+       <div className="logo-mark" aria-hidden="true">
+-        <i /><b /><span />
++        <i />
++        <b />
++        <span />
+       </div>
+-      {text && (
+       <div className="logo-text">
+         <strong>{t.brand}</strong>
+-          {!compact && <small>{t.shortBrand}</small>}
++        <small>{t.shortBrand}</small>
+       </div>
+-      )}
+     </div>
+-  );
++  )
+ }
+@@ -484,49 +562,55 @@ function Logo({ text = true, compact = false, lang }: { text?: boolean; compact?
+ function App() {
+-  const [lang, setLang] = useState<Lang>(() => (sessionStorage.getItem("gomoku-lang") as Lang) || "zh");
+-  const [theme, setTheme] = useState<Theme>(() => (sessionStorage.getItem("gomoku-theme") as Theme) || "light");
+-  const [page, setPage] = useState<Page>("login");
+-  const [modal, setModal] = useState<Modal>(null);
+-  const [toast, setToast] = useState("");
+-  const [renju, setRenju] = useState(false);
+-  const [lessonMoves, setLessonMoves] = useState<number[]>([111, 112]);
+-  const [gameMoves, setGameMoves] = useState<number[]>([112, 97, 113, 98, 127, 83]);
+-  const [showPassword, setShowPassword] = useState(false);
+-  const [loginEmail, setLoginEmail] = useState("");
+-  const [loginPassword, setLoginPassword] = useState("");
+-  const [error, setError] = useState("");
+-  const [audioPlaying, setAudioPlaying] = useState(false);
+-  const [setupType, setSetupType] = useState<"ai" | "local">("ai");
+-  const [difficulty, setDifficulty] = useState("Medium");
+-  const [firstMove, setFirstMove] = useState("random");
+-  const [timer, setTimer] = useState("unlimited");
+-  const [boardStyle, setBoardStyle] = useState("wood");
+-  const t = copy[lang];
++  const [lang, setLang] = useState<Lang>(
++    () => sessionStorage.getItem("gomoku-lang") as Lang || "zh",
++  )
++  const [theme, setTheme] = useState<Theme>(
++    () => sessionStorage.getItem("gomoku-theme") as Theme || "light",
++  )
++  const [page, setPage] = useState<Page>("login")
++  const [modal, setModal] = useState<Modal>(null)
++  const [toast, setToast] = useState("")
++  const [renju, setRenju] = useState(false)
++  const [lessonMoves, setLessonMoves] = useState<number[]>([111, 112])
++  const [gameMoves, setGameMoves] = useState<number[]>([
++    112, 97, 113, 98, 127, 83,
++  ])
++  const [showPassword, setShowPassword] = useState(false)
++  const [loginEmail, setLoginEmail] = useState("")
++  const [loginPassword, setLoginPassword] = useState("")
++  const [error, setError] = useState("")
++  const [audioPlaying, setAudioPlaying] = useState(false)
++  const [setupType, setSetupType] = useState<"ai" | "local">("ai")
++  const [difficulty, setDifficulty] = useState("Medium")
++  const [firstMove, setFirstMove] = useState("random")
++  const [timer, setTimer] = useState("unlimited")
++  const [boardStyle, setBoardStyle] = useState("wood")
++  const t = copy[lang]
+ 
+   useEffect(() => {
+-    document.documentElement.dataset.theme = theme;
+-    sessionStorage.setItem("gomoku-theme", theme);
+-    sessionStorage.setItem("gomoku-lang", lang);
+-  }, [theme, lang]);
++    document.documentElement.dataset.theme = theme
++    sessionStorage.setItem("gomoku-theme", theme)
++    sessionStorage.setItem("gomoku-lang", lang)
++  }, [theme, lang])
+ 
+   useEffect(() => {
+-    if (!toast) return;
+-    const id = window.setTimeout(() => setToast(""), 2800);
+-    return () => window.clearTimeout(id);
+-  }, [toast]);
++    if (!toast) return
++    const id = window.setTimeout(() => setToast(""), 2800)
++    return () => window.clearTimeout(id)
++  }, [toast])
+ 
+   const navigate = (next: Page) => {
+-    setPage(next);
+-    setModal(null);
+-    window.scrollTo({ top: 0, behavior: "smooth" });
+-  };
++    setPage(next)
++    setModal(null)
++    window.scrollTo({ top: 0, behavior: "smooth" })
++  }
+ 
+   const openSetup = (isRenju: boolean) => {
+-    setRenju(isRenju);
+-    setModal("setup");
+-  };
++    setRenju(isRenju)
++    setModal("setup")
++  }
+ 
+   const startGame = () => {
+-    setGameMoves([112, 97, 113, 98, 127, 83]);
+-    navigate("game");
+-  };
++    setGameMoves([112, 97, 113, 98, 127, 83])
++    navigate("game")
++  }
+ 
+@@ -534,12 +618,12 @@ function App() {
+     if (!loginEmail || !loginPassword) {
+-      setError(t.required);
+-      return;
++      setError(t.required)
++      return
+     }
+     if (!loginEmail.includes("@")) {
+-      setError(t.invalidEmail);
+-      return;
++      setError(t.invalidEmail)
++      return
++    }
++    setError("")
++    navigate("home")
+   }
+-    setError("");
+-    navigate("home");
+-  };
+ 
+@@ -577,3 +661,10 @@ function App() {
+           <main>
+-            {page === "home" && <Home lang={lang} navigate={navigate} openSetup={openSetup} openModal={setModal} />}
++            {page === "home" && (
++              <Home
++                lang={lang}
++                navigate={navigate}
++                openSetup={openSetup}
++                openModal={setModal}
++              />
++            )}
+             {page === "lessons" && <Lessons lang={lang} navigate={navigate} />}
+@@ -590,3 +681,5 @@ function App() {
+             )}
+-            {page === "challenge" && <Challenge lang={lang} navigate={navigate} openModal={setModal} />}
++            {page === "challenge" && (
++              <Challenge lang={lang} navigate={navigate} openModal={setModal} />
++            )}
+             {page === "game" && (
+@@ -604,4 +697,8 @@ function App() {
+             )}
+-            {page === "leaderboard" && <Leaderboard lang={lang} navigate={navigate} />}
+-            {page === "profile" && <Profile lang={lang} openModal={setModal} navigate={navigate} />}
++            {page === "leaderboard" && (
++              <Leaderboard lang={lang} navigate={navigate} />
++            )}
++            {page === "profile" && (
++              <Profile lang={lang} openModal={setModal} navigate={navigate} />
++            )}
+             {page === "settings" && (
+@@ -619,3 +716,8 @@ function App() {
+           </main>
+-          <MobileNav page={page} lang={lang} navigate={navigate} openSetup={openSetup} />
++          <MobileNav
++            page={page}
++            lang={lang}
++            navigate={navigate}
++            openSetup={openSetup}
++          />
+         </>
+@@ -642,4 +744,4 @@ function App() {
+           undo={() => {
+-            setGameMoves((m) => m.slice(0, -2));
+-            setModal(null);
++            setGameMoves((m) => m.slice(0, -2))
++            setModal(null)
+           }}
+@@ -649,3 +751,5 @@ function App() {
+         <div className="toast" role="status">
+-          <span className="toast-check"><Icon name="check" size={16} /></span>
++          <span className="toast-check">
++            <Icon name="check" size={16} />
++          </span>
+           {toast}
+@@ -654,3 +758,3 @@ function App() {
+     </div>
+-  );
++  )
+ }
+@@ -667,12 +771,12 @@ function Header({
+ }: {
+-  page: Page;
+-  lang: Lang;
+-  theme: Theme;
+-  setLang: (l: Lang) => void;
+-  setTheme: (t: Theme) => void;
+-  navigate: (p: Page) => void;
+-  openModal: (m: Modal) => void;
+-  openSetup: (r: boolean) => void;
++  page: Page
++  lang: Lang
++  theme: Theme
++  setLang: (l: Lang) => void
++  setTheme: (t: Theme) => void
++  navigate: (p: Page) => void
++  openModal: (m: Modal) => void
++  openSetup: (r: boolean) => void
+ }) {
+-  const t = copy[lang];
++  const t = copy[lang]
+   const nav = [
+@@ -683,6 +787,10 @@ function Header({
+     ["leaderboard", t.leaderboard],
+-  ] as const;
++  ] as const
+   return (
+     <header className="site-header">
+-      <button className="logo-button" onClick={() => navigate("home")} aria-label={t.home}>
++      <button
++        className="logo-button"
++        onClick={() => navigate("home")}
++        aria-label={t.home}
++      >
+         <Logo lang={lang} />
+@@ -693,4 +801,15 @@ function Header({
+             key={id}
+-            className={(page === id || (id === "lessons" && ["lesson", "challenge"].includes(page))) ? "active" : ""}
+-            onClick={() => id === "play" ? openSetup(false) : id === "renju" ? openSetup(true) : navigate(id as Page)}
++            className={
++              page === id ||
++              (id === "lessons" && ["lesson", "challenge"].includes(page))
++                ? "active"
++                : ""
++            }
++            onClick={() =>
++              id === "play"
++                ? openSetup(false)
++                : id === "renju"
++                  ? openSetup(true)
++                  : navigate(id as Page)
++            }
+           >
+@@ -709,13 +828,34 @@ function Header({
+         </button>
+-        <button className="avatar-button" onClick={() => navigate("profile")} aria-label={t.records}>
+-          <span className="avatar"><Panda small /></span>
+-          <span className="avatar-copy"><b>{t.guestUser}</b><small>{t.guestTag}</small></span>
++        <button
++          className="avatar-button"
++          onClick={() => navigate("profile")}
++          aria-label={t.records}
++        >
++          <span className="avatar">
++            <Panda small />
++          </span>
++          <span className="avatar-copy">
++            <b>{t.guestUser}</b>
++            <small>{t.guestTag}</small>
++          </span>
++        </button>
++        <button
++          className="more-button"
++          onClick={() => openModal("logout")}
++          aria-label={t.logout}
++        >
++          •••
+         </button>
+-        <button className="more-button" onClick={() => openModal("logout")} aria-label={t.logout}>•••</button>
+       </div>
+     </header>
+-  );
++  )
+ }
+ 
+-function LanguageControl({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
++function LanguageControl({
++  lang,
++  setLang,
++}: {
++  lang: Lang
++  setLang: (l: Lang) => void
++}) {
+   return (
+@@ -723,3 +863,7 @@ function LanguageControl({ lang, setLang }: { lang: Lang; setLang: (l: Lang) =>
+       <Icon name="globe" size={17} />
+-      <select value={lang} onChange={(e) => setLang(e.target.value as Lang)} aria-label="Language">
++      <select
++        value={lang}
++        onChange={(e) => setLang(e.target.value as Lang)}
++        aria-label="Language"
++      >
+         <option value="zh">繁體中文</option>
+@@ -728,3 +872,3 @@ function LanguageControl({ lang, setLang }: { lang: Lang; setLang: (l: Lang) =>
+     </div>
+-  );
++  )
+ }
+@@ -732,18 +876,18 @@ function LanguageControl({ lang, setLang }: { lang: Lang; setLang: (l: Lang) =>
+ function LoginPage(props: {
+-  lang: Lang;
+-  theme: Theme;
+-  setLang: (l: Lang) => void;
+-  setTheme: (t: Theme) => void;
+-  email: string;
+-  password: string;
+-  setEmail: (s: string) => void;
+-  setPassword: (s: string) => void;
+-  showPassword: boolean;
+-  setShowPassword: (v: boolean) => void;
+-  error: string;
+-  signIn: () => void;
+-  guest: () => void;
+-  openModal: (m: Modal) => void;
++  lang: Lang
++  theme: Theme
++  setLang: (l: Lang) => void
++  setTheme: (t: Theme) => void
++  email: string
++  password: string
++  setEmail: (s: string) => void
++  setPassword: (s: string) => void
++  showPassword: boolean
++  setShowPassword: (v: boolean) => void
++  error: string
++  signIn: () => void
++  guest: () => void
++  openModal: (m: Modal) => void
+ }) {
+-  const t = copy[props.lang];
++  const t = copy[props.lang]
+   return (
+@@ -756,3 +900,5 @@ function LoginPage(props: {
+             className="icon-button"
+-            onClick={() => props.setTheme(props.theme === "light" ? "dark" : "light")}
++            onClick={() =>
++              props.setTheme(props.theme === "light" ? "dark" : "light")
++            }
+             aria-label={props.theme === "light" ? t.dark : t.light}
+@@ -776,3 +922,7 @@ function LoginPage(props: {
+             <span className="eyebrow">{t.heroEyebrow}</span>
+-            <h1>{t.heroTitle.split("\n").map((x) => <span key={x}>{x}</span>)}</h1>
++            <h1>
++              {t.heroTitle.split("\n").map((x) => (
++                <span key={x}>{x}</span>
++              ))}
++            </h1>
+             <p>{t.loginIntro}</p>
+@@ -785,3 +935,5 @@ function LoginPage(props: {
+           <div className="login-card">
+-            <div className="mobile-logo"><Logo lang={props.lang} /></div>
++            <div className="mobile-logo">
++              <Logo lang={props.lang} />
++            </div>
+             <span className="eyebrow accent">{t.welcome}</span>
+@@ -790,16 +942,36 @@ function LoginPage(props: {
+             <button className="button button-guest" onClick={props.guest}>
+-              <span className="guest-symbol"><Icon name="user" size={18} /></span>{t.guest}<Icon name="arrow" size={18} />
++              <span className="guest-symbol">
++                <Icon name="user" size={18} />
++              </span>
++              {t.guest}
++              <Icon name="arrow" size={18} />
+             </button>
+-            <div className="divider"><span>{t.or}</span></div>
++            <div className="divider">
++              <span>{t.or}</span>
++            </div>
+             <div className="social-row">
+-              <button className="button button-social"><b className="google-g">G</b>{t.google}</button>
+-              <button className="button button-social"><b className="facebook-f">f</b>{t.facebook}</button>
++              <button className="button button-social">
++                <b className="google-g">G</b>
++                {t.google}
++              </button>
++              <button className="button button-social">
++                <b className="facebook-f">f</b>
++                {t.facebook}
++              </button>
+             </div>
+-            <label className="field-label">{t.email}
+-              <span className="input-wrap"><Icon name="user" size={18} />
+-                <input value={props.email} onChange={(e) => props.setEmail(e.target.value)} placeholder="player@example.com" />
++            <label className="field-label">
++              {t.email}
++              <span className="input-wrap">
++                <Icon name="user" size={18} />
++                <input
++                  value={props.email}
++                  onChange={(e) => props.setEmail(e.target.value)}
++                  placeholder="player@example.com"
++                />
+               </span>
+             </label>
+-            <label className="field-label">{t.password}
+-              <span className="input-wrap"><Icon name="lock" size={18} />
++            <label className="field-label">
++              {t.password}
++              <span className="input-wrap">
++                <Icon name="lock" size={18} />
+                 <input
+@@ -810,3 +982,8 @@ function LoginPage(props: {
+                 />
+-                <button onClick={() => props.setShowPassword(!props.showPassword)} aria-label="Show password"><Icon name="eye" size={18} /></button>
++                <button
++                  onClick={() => props.setShowPassword(!props.showPassword)}
++                  aria-label="Show password"
++                >
++                  <Icon name="eye" size={18} />
++                </button>
+               </span>
+@@ -814,5 +991,24 @@ function LoginPage(props: {
+             {props.error && <div className="form-error">{props.error}</div>}
+-            <button className="text-link forgot-link" onClick={() => props.openModal("forgot")}>{t.forgot}</button>
+-            <button className="button button-primary button-full" onClick={props.signIn}>{t.signIn}<Icon name="arrow" size={18} /></button>
+-            <p className="signup-line">{t.noAccount} <button className="text-link" onClick={() => props.openModal("signup")}>{t.signup}</button></p>
++            <button
++              className="text-link forgot-link"
++              onClick={() => props.openModal("forgot")}
++            >
++              {t.forgot}
++            </button>
++            <button
++              className="button button-primary button-full"
++              onClick={props.signIn}
++            >
++              {t.signIn}
++              <Icon name="arrow" size={18} />
++            </button>
++            <p className="signup-line">
++              {t.noAccount}{" "}
++              <button
++                className="text-link"
++                onClick={() => props.openModal("signup")}
++              >
++                {t.signup}
++              </button>
++            </p>
+           </div>
+@@ -821,14 +1017,48 @@ function LoginPage(props: {
+     </div>
+-  );
++  )
+ }
+ 
+-function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate: (p: Page) => void; openSetup: (r: boolean) => void; openModal: (m: Modal) => void }) {
+-  const t = copy[lang];
++function Home({
++  lang,
++  navigate,
++  openSetup,
++  openModal,
++}: {
++  lang: Lang
++  navigate: (p: Page) => void
++  openSetup: (r: boolean) => void
++  openModal: (m: Modal) => void
++}) {
++  const t = copy[lang]
+   const cards = [
+-    { type: "learn", n: "01", title: t.teachingTitle, desc: t.teachingDesc, action: t.continue, onClick: () => navigate("lessons"), icon: "book" },
+-    { type: "free", n: "02", title: t.freeTitle, desc: t.freeDesc, action: t.quickGame, onClick: () => openSetup(false), icon: "play" },
+-    { type: "pro", n: "03", title: t.renjuTitle, desc: t.renjuDesc, action: t.startGame, onClick: () => openSetup(true), icon: "trophy" },
+-  ];
++    {
++      type: "learn",
++      n: "01",
++      title: t.teachingTitle,
++      desc: t.teachingDesc,
++      action: t.continue,
++      onClick: () => navigate("lessons"),
++      icon: "book",
++    },
++    {
++      type: "free",
++      n: "02",
++      title: t.freeTitle,
++      desc: t.freeDesc,
++      action: t.quickGame,
++      onClick: () => openSetup(false),
++      icon: "play",
++    },
++    {
++      type: "pro",
++      n: "03",
++      title: t.renjuTitle,
++      desc: t.renjuDesc,
++      action: t.startGame,
++      onClick: () => openSetup(true),
++      icon: "trophy",
++    },
++  ]
+   return (
+-    <div className="page home-page">
++    <div className="home-page">
+       <section className="hero">
+@@ -836,12 +1066,34 @@ function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate:
+           <span className="eyebrow">{t.heroEyebrow}</span>
+-          <h1>{t.heroTitle.split("\n").map((x) => <span key={x}>{x}</span>)}</h1>
++          <h1>
++            {t.heroTitle.split("\n").map((x) => (
++              <span key={x}>{x}</span>
++            ))}
++          </h1>
+           <p>{t.heroBody}</p>
+           <div className="hero-actions">
+-            <button className="button button-primary" onClick={() => navigate("lessons")}><Icon name="book" />{t.startLearning}</button>
+-            <button className="button button-secondary" onClick={() => openSetup(false)}><Icon name="play" />{t.quickGame}</button>
++            <button
++              className="button button-primary"
++              onClick={() => navigate("lessons")}
++            >
++              <Icon name="book" />
++              {t.startLearning}
++            </button>
++            <button
++              className="button button-secondary"
++              onClick={() => openSetup(false)}
++            >
++              <Icon name="play" />
++              {t.quickGame}
++            </button>
+           </div>
+           <div className="hero-meta">
+-            <div><b>3/8</b><span>{t.progress}</span></div>
++            <div>
++              <b>3/8</b>
++              <span>{t.progress}</span>
++            </div>
+             <i />
+-            <div><b>4</b><span>{t.streak}</span></div>
++            <div>
++              <b>4</b>
++              <span>{t.streak}</span>
++            </div>
+           </div>
+@@ -850,6 +1102,25 @@ function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate:
+           <div className="board-sample">
+-            {Array.from({ length: 49 }, (_, i) => <i key={i} className={[10, 17, 24].includes(i) ? "black" : [11, 18].includes(i) ? "white" : ""} />)}
++            {Array.from({ length: 49 }, (_, i) => (
++              <i
++                key={i}
++                className={
++                  [10, 17, 24].includes(i)
++                    ? "black"
++                    : [11, 18].includes(i)
++                      ? "white"
++                      : ""
++                }
++              />
++            ))}
++          </div>
++          <div className="mascot-home">
++            <Panda />
++          </div>
++          <div className="tip-bubble">
++            <Icon name="sound" size={18} />
++            <span>
++              {t.cantoneseNarration}
++              <b>{t.narrationOn}</b>
++            </span>
+           </div>
+-          <div className="mascot-home"><Panda /></div>
+-          <div className="tip-bubble"><Icon name="sound" size={18} /><span>{t.cantoneseNarration}<b>{t.narrationOn}</b></span></div>
+         </div>
+@@ -859,3 +1130,7 @@ function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate:
+         <div className="section-heading">
+-          <div><span className="eyebrow accent">{t.greeting}</span><h2>{t.chooseMode}</h2><p>{t.chooseModeSub}</p></div>
++          <div>
++            <span className="eyebrow accent">{t.greeting}</span>
++            <h2>{t.chooseMode}</h2>
++            <p>{t.chooseModeSub}</p>
++          </div>
+         </div>
+@@ -864,7 +1139,31 @@ function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate:
+             <article className={`mode-card ${card.type}`} key={card.type}>
+-              <div className="card-top"><span className="mode-icon"><Icon name={card.icon} size={27} /></span><small>{card.n}</small></div>
+-              <h3>{card.title}</h3><p>{card.desc}</p>
+-              {card.type === "learn" && <div className="mini-progress"><span><i style={{ width: "38%" }} /></span><b>38%</b></div>}
+-              {card.type === "pro" && <div className="rule-pills"><span>三三</span><span>四四</span><span>長連</span></div>}
+-              <button className="card-link" onClick={card.onClick}>{card.action}<span><Icon name="arrow" size={17} /></span></button>
++              <div className="card-top">
++                <span className="mode-icon">
++                  <Icon name={card.icon} size={27} />
++                </span>
++                <small>{card.n}</small>
++              </div>
++              <h3>{card.title}</h3>
++              <p>{card.desc}</p>
++              {card.type === "learn" && (
++                <div className="mini-progress">
++                  <span>
++                    <i style={{ width: "38%" }} />
++                  </span>
++                  <b>38%</b>
++                </div>
++              )}
++              {card.type === "pro" && (
++                <div className="rule-pills">
++                  <span>三三</span>
++                  <span>四四</span>
++                  <span>長連</span>
++                </div>
++              )}
++              <button className="card-link" onClick={card.onClick}>
++                {card.action}
++                <span>
++                  <Icon name="arrow" size={17} />
++                </span>
++              </button>
+             </article>
+@@ -873,10 +1172,52 @@ function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate:
+         <div className="quick-grid">
+-          <button className="quick-card" onClick={() => navigate("leaderboard")}><span><Icon name="trophy" /></span><div><b>{t.leaderboard}</b><small>#24 · {t.yourRank}</small></div><Icon name="arrow" /></button>
+-          <button className="quick-card" onClick={() => navigate("profile")}><span><Icon name="user" /></span><div><b>{t.records}</b><small>12 {t.moves} · 67% {t.winRate}</small></div><Icon name="arrow" /></button>
+-          <button className="quick-card" onClick={() => navigate("settings")}><span><Icon name="settings" /></span><div><b>{t.settings}</b><small>{t.accountSettings}</small></div><Icon name="arrow" /></button>
++          <button
++            className="quick-card"
++            onClick={() => navigate("leaderboard")}
++          >
++            <span>
++              <Icon name="trophy" />
++            </span>
++            <div>
++              <b>{t.leaderboard}</b>
++              <small>#24 · {t.yourRank}</small>
++            </div>
++            <Icon name="arrow" />
++          </button>
++          <button className="quick-card" onClick={() => navigate("profile")}>
++            <span>
++              <Icon name="user" />
++            </span>
++            <div>
++              <b>{t.records}</b>
++              <small>
++                12 {t.moves} · 67% {t.winRate}
++              </small>
++            </div>
++            <Icon name="arrow" />
++          </button>
++          <button className="quick-card" onClick={() => navigate("settings")}>
++            <span>
++              <Icon name="settings" />
++            </span>
++            <div>
++              <b>{t.settings}</b>
++              <small>{t.accountSettings}</small>
++            </div>
++            <Icon name="arrow" />
++          </button>
+         </div>
+         <div className="account-banner">
+-          <div className="mini-panda"><Panda small /></div>
+-          <div><b>{t.createPrompt}</b><span>{t.ttsNote}</span></div>
+-          <button className="button button-primary" onClick={() => openModal("signup")}>{t.createAccount}</button>
++          <div className="mini-panda">
++            <Panda small />
++          </div>
++          <div>
++            <b>{t.createPrompt}</b>
++            <span>{t.ttsNote}</span>
++          </div>
++          <button
++            className="button button-primary"
++            onClick={() => openModal("signup")}
++          >
++            {t.createAccount}
++          </button>
+         </div>
+@@ -884,3 +1225,3 @@ function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate:
+     </div>
+-  );
++  )
+ }
+@@ -888,12 +1229,49 @@ function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate:
+ const lessonData = {
+-  zh: ["棋盤與棋子", "基本規則", "連五獲勝", "活三", "沖四", "阻擋對手", "簡單陷阱", "棋局挑戰"],
+-  en: ["The Board and Stones", "Basic Rules", "Winning with Five in a Row", "Open Three", "Rush Four", "Blocking the Opponent", "Simple Traps", "Board Challenges"],
+-};
++  zh: [
++    "棋盤與棋子",
++    "基本規則",
++    "連五獲勝",
++    "活三",
++    "沖四",
++    "阻擋對手",
++    "簡單陷阱",
++    "棋局挑戰",
++  ],
++  en: [
++    "The Board and Stones",
++    "Basic Rules",
++    "Winning with Five in a Row",
++    "Open Three",
++    "Rush Four",
++    "Blocking the Opponent",
++    "Simple Traps",
++    "Board Challenges",
++  ],
++}
+ 
+-function Lessons({ lang, navigate }: { lang: Lang; navigate: (p: Page) => void }) {
+-  const t = copy[lang];
++function Lessons({
++  lang,
++  navigate,
++}: {
++  lang: Lang
++  navigate: (p: Page) => void
++}) {
++  const t = copy[lang]
+   return (
+-    <div className="page sub-page">
+-      <PageIntro eyebrow={t.teachingTitle} title={t.lessonPath} body={t.lessonPathSub} back={t.backHome} onBack={() => navigate("home")}>
+-        <div className="audio-chip"><Icon name="sound" size={18} /><span><b>{t.cantoneseNarration}</b><small>{t.narrationOn}</small></span><i /></div>
++    <div>
++      <PageIntro
++        eyebrow={t.teachingTitle}
++        title={t.lessonPath}
++        body={t.lessonPathSub}
++        back={t.backHome}
++        onBack={() => navigate("home")}
++      >
++        <div className="audio-chip">
++          <Icon name="sound" size={18} />
++          <span>
++            <b>{t.cantoneseNarration}</b>
++            <small>{t.narrationOn}</small>
++          </span>
++          <i />
++        </div>
+       </PageIntro>
+@@ -901,5 +1279,13 @@ function Lessons({ lang, navigate }: { lang: Lang; navigate: (p: Page) => void }
+         <div className="progress-panel">
+-          <div className="progress-ring"><b>38%</b></div>
+-          <div><span>{t.progress}</span><b>{t.lessonsDone}</b><small>{t.streak}</small></div>
+-          <div className="progress-line"><i /></div>
++          <div className="progress-ring">
++            <b>38%</b>
++          </div>
++          <div>
++            <span>{t.progress}</span>
++            <b>{t.lessonsDone}</b>
++            <small>{t.streak}</small>
++          </div>
++          <div className="progress-line">
++            <i />
++          </div>
+         </div>
+@@ -907,11 +1293,37 @@ function Lessons({ lang, navigate }: { lang: Lang; navigate: (p: Page) => void }
+           {lessonData[lang].map((name, i) => {
+-            const status = i < 3 ? "done" : i === 3 ? "current" : "locked";
++            const status = i < 3 ? "done" : i === 3 ? "current" : "locked"
+             return (
+-              <button className={`lesson-row ${status}`} key={name} onClick={() => status !== "locked" && navigate(i === 7 ? "challenge" : "lesson")}>
+-                <span className="lesson-number">{status === "done" ? <Icon name="check" /> : i + 1}</span>
+-                <span className="lesson-copy"><small>{lang === "zh" ? `第 ${i + 1} 課` : `LESSON ${i + 1}`}</small><b>{name}</b></span>
+-                <span className={`status-pill ${status}`}>{status === "done" ? t.completed : status === "current" ? t.inProgress : t.notStarted}</span>
+-                <span className="row-arrow">{status === "locked" ? <Icon name="lock" size={18} /> : <Icon name="arrow" />}</span>
++              <button
++                className={`lesson-row ${status}`}
++                key={name}
++                onClick={() =>
++                  status !== "locked" &&
++                  navigate(i === 7 ? "challenge" : "lesson")
++                }
++              >
++                <span className="lesson-number">
++                  {status === "done" ? <Icon name="check" /> : i + 1}
++                </span>
++                <span className="lesson-copy">
++                  <small>
++                    {lang === "zh" ? `第 ${i + 1} 課` : `LESSON ${i + 1}`}
++                  </small>
++                  <b>{name}</b>
++                </span>
++                <span className={`status-pill ${status}`}>
++                  {status === "done"
++                    ? t.completed
++                    : status === "current"
++                      ? t.inProgress
++                      : t.notStarted}
++                </span>
++                <span className="row-arrow">
++                  {status === "locked" ? (
++                    <Icon name="lock" size={18} />
++                  ) : (
++                    <Icon name="arrow" />
++                  )}
++                </span>
+               </button>
+-            );
++            )
+           })}
+@@ -920,12 +1332,33 @@ function Lessons({ lang, navigate }: { lang: Lang; navigate: (p: Page) => void }
+     </div>
+-  );
++  )
+ }
+ 
+-function PageIntro({ eyebrow, title, body, back, onBack, children }: { eyebrow: string; title: string; body: string; back: string; onBack: () => void; children?: React.ReactNode }) {
++function PageIntro({
++  eyebrow,
++  title,
++  body,
++  back,
++  onBack,
++  children,
++}: {
++  eyebrow: string
++  title: string
++  body: string
++  back: string
++  onBack: () => void
++  children?: React.ReactNode
++}) {
+   return (
+     <section className="page-intro">
+-      <div className="content-section intro-inner">
+-        <button className="back-link" onClick={onBack}><Icon name="back" size={18} />{back}</button>
++      <div className="content-section">
++        <button className="back-link" onClick={onBack}>
++          <Icon name="back" size={18} />
++          {back}
++        </button>
+         <div className="intro-row">
+-          <div><span className="eyebrow accent">{eyebrow}</span><h1>{title}</h1><p>{body}</p></div>
++          <div>
++            <span className="eyebrow accent">{eyebrow}</span>
++            <h1>{title}</h1>
++            <p>{body}</p>
++          </div>
+           {children}
+@@ -934,11 +1367,26 @@ function PageIntro({ eyebrow, title, body, back, onBack, children }: { eyebrow:
+     </section>
+-  );
++  )
+ }
+ 
+-function GomokuBoard({ moves, onMove, highlight, style = "wood", compact = false }: { moves: number[]; onMove?: (i: number) => void; highlight?: number; style?: string; compact?: boolean }) {
++function GomokuBoard({
++  moves,
++  onMove,
++  highlight,
++  style = "wood",
++}: {
++  moves: number[]
++  onMove?: (i: number) => void
++  highlight?: number
++  style?: string
++}) {
+   return (
+-    <div className={`gomoku-board ${style} ${compact ? "compact" : ""}`} role="grid" aria-label="15 by 15 Gomoku board">
++    <div
++      className={`gomoku-board ${style}`}
++      role="grid"
++      aria-label="15 by 15 Gomoku board"
++    >
+       {Array.from({ length: 225 }, (_, i) => {
+-        const moveIndex = moves.indexOf(i);
+-        const stone = moveIndex >= 0 ? (moveIndex % 2 === 0 ? "black" : "white") : "";
++        const moveIndex = moves.indexOf(i)
++        const stone =
++          moveIndex >= 0 ? (moveIndex % 2 === 0 ? "black" : "white") : ""
+         return (
+@@ -946,3 +1394,5 @@ function GomokuBoard({ moves, onMove, highlight, style = "wood", compact = false
+             key={i}
+-            className={`intersection ${stone} ${highlight === i ? "highlight" : ""}`}
++            className={`intersection ${stone} ${
++              highlight === i ? "highlight" : ""
++            }`}
+             onClick={() => !stone && onMove?.(i)}
+@@ -952,6 +1402,6 @@ function GomokuBoard({ moves, onMove, highlight, style = "wood", compact = false
+           </button>
+-        );
++        )
+       })}
+     </div>
+-  );
++  )
+ }
+@@ -959,21 +1409,34 @@ function GomokuBoard({ moves, onMove, highlight, style = "wood", compact = false
+ function Lesson(props: {
+-  lang: Lang;
+-  navigate: (p: Page) => void;
+-  moves: number[];
+-  setMoves: React.Dispatch<React.SetStateAction<number[]>>;
+-  audioPlaying: boolean;
+-  setAudioPlaying: (v: boolean) => void;
+-  openModal: (m: Modal) => void;
++  lang: Lang
++  navigate: (p: Page) => void
++  moves: number[]
++  setMoves: React.Dispatch<React.SetStateAction<number[]>>
++  audioPlaying: boolean
++  setAudioPlaying: (v: boolean) => void
++  openModal: (m: Modal) => void
+ }) {
+-  const t = copy[props.lang];
++  const t = copy[props.lang]
+   const place = (i: number) => {
+-    props.setMoves((m) => [...m, i]);
+-    props.openModal(i === 113 ? "correct" : "incorrect");
+-  };
++    props.setMoves((m) => [...m, i])
++    props.openModal(i === 113 ? "correct" : "incorrect")
++  }
+   return (
+-    <div className="game-page lesson-page">
++    <div>
+       <div className="lesson-topbar">
+-        <button className="back-link" onClick={() => props.navigate("lessons")}><Icon name="back" />{t.backLessons}</button>
+-        <div className="step-bar"><span><i /></span><b>{t.step}</b></div>
+-        <button className="text-link danger" onClick={() => props.openModal("leave")}>{t.exit}</button>
++        <button className="back-link" onClick={() => props.navigate("lessons")}>
++          <Icon name="back" />
++          {t.backLessons}
++        </button>
++        <div className="step-bar">
++          <span>
++            <i />
++          </span>
++          <b>{t.step}</b>
++        </div>
++        <button
++          className="text-link danger"
++          onClick={() => props.openModal("leave")}
++        >
++          {t.exit}
++        </button>
+       </div>
+@@ -981,7 +1444,30 @@ function Lesson(props: {
+         <section className="board-area">
+-          <div className="board-heading"><div><span className="eyebrow accent">{t.lesson}</span><h1>{t.openThree}</h1></div><span className="no-timer"><Icon name="book" size={18} />{t.teachingTitle}</span></div>
+-          <div className="board-shell"><GomokuBoard moves={props.moves} onMove={place} highlight={113} /></div>
+-          <div className="board-actions mobile-only-actions">
+-            <button className="button button-secondary" onClick={() => props.setMoves((m) => m.slice(0, -1))}><Icon name="undo" />{t.undo}</button>
+-            <button className="button button-secondary" onClick={() => props.openModal("hint")}><Icon name="bulb" />{t.hint}</button>
++          <div className="board-heading">
++            <div>
++              <span className="eyebrow accent">{t.lesson}</span>
++              <h1>{t.openThree}</h1>
++            </div>
++            <span className="no-timer">
++              <Icon name="book" size={18} />
++              {t.teachingTitle}
++            </span>
++          </div>
++          <div className="board-shell">
++            <GomokuBoard moves={props.moves} onMove={place} highlight={113} />
++          </div>
++          <div className="mobile-only-actions">
++            <button
++              className="button button-secondary"
++              onClick={() => props.setMoves((m) => m.slice(0, -1))}
++            >
++              <Icon name="undo" />
++              {t.undo}
++            </button>
++            <button
++              className="button button-secondary"
++              onClick={() => props.openModal("hint")}
++            >
++              <Icon name="bulb" />
++              {t.hint}
++            </button>
+           </div>
+@@ -989,18 +1475,71 @@ function Lesson(props: {
+         <aside className="lesson-panel">
+-          <div className="lesson-panel-top"><span className="mode-icon learn-icon"><Icon name="book" /></span><div><small>{t.lesson}</small><h2>{t.openThree}</h2></div></div>
++          <div className="lesson-panel-top">
++            <span className="mode-icon learn-icon">
++              <Icon name="book" />
++            </span>
++            <div>
++              <small>{t.lesson}</small>
++              <h2>{t.openThree}</h2>
++            </div>
++          </div>
+           <div className="narration-box">
+-            <div className="narration-head"><span><Icon name="sound" size={17} />{t.cantoneseNarration}</span><small>00:18 / 00:32</small></div>
+-            <div className="waveform">{Array.from({ length: 27 }, (_, i) => <i key={i} style={{ height: `${8 + ((i * 11) % 23)}px` }} />)}</div>
+-            <button className="round-play" onClick={() => props.setAudioPlaying(!props.audioPlaying)}>{props.audioPlaying ? "Ⅱ" : "▶"}</button>
++            <div className="narration-head">
++              <span>
++                <Icon name="sound" size={17} />
++                {t.cantoneseNarration}
++              </span>
++              <small>00:18 / 00:32</small>
++            </div>
++            <div className="waveform">
++              {Array.from({ length: 27 }, (_, i) => (
++                <i key={i} style={{ height: `${8 + ((i * 11) % 23)}px` }} />
++              ))}
++            </div>
++            <button
++              className="round-play"
++              onClick={() => props.setAudioPlaying(!props.audioPlaying)}
++            >
++              {props.audioPlaying ? "Ⅱ" : "▶"}
++            </button>
+           </div>
+           <p className="lesson-explain">{t.openThreeText}</p>
+-          <div className="instruction-box"><span>{t.step}</span><b>{t.instruction}</b></div>
++          <div className="instruction-box">
++            <span>{t.step}</span>
++            <b>{t.instruction}</b>
++          </div>
+           <div className="panel-actions">
+-            <button className="button button-secondary" onClick={() => props.setMoves((m) => m.slice(0, -1))}><Icon name="undo" />{t.undo}</button>
+-            <button className="button button-secondary" onClick={() => props.openModal("hint")}><Icon name="bulb" />{t.hint}</button>
++            <button
++              className="button button-secondary"
++              onClick={() => props.setMoves((m) => m.slice(0, -1))}
++            >
++              <Icon name="undo" />
++              {t.undo}
++            </button>
++            <button
++              className="button button-secondary"
++              onClick={() => props.openModal("hint")}
++            >
++              <Icon name="bulb" />
++              {t.hint}
++            </button>
+           </div>
+-          <button className="button button-ghost button-full" onClick={() => props.setAudioPlaying(!props.audioPlaying)}><Icon name="sound" />{t.replay}</button>
++          <button
++            className="button button-ghost button-full"
++            onClick={() => props.setAudioPlaying(!props.audioPlaying)}
++          >
++            <Icon name="sound" />
++            {t.replay}
++          </button>
+           <div className="lesson-bottom-nav">
+-            <button className="button button-ghost"><Icon name="back" />{t.previous}</button>
+-            <button className="button button-primary" onClick={() => props.navigate("challenge")}>{t.next}<Icon name="arrow" /></button>
++            <button className="button button-ghost">
++              <Icon name="back" />
++              {t.previous}
++            </button>
++            <button
++              className="button button-primary"
++              onClick={() => props.navigate("challenge")}
++            >
++              {t.next}
++              <Icon name="arrow" />
++            </button>
+           </div>
+@@ -1009,18 +1548,37 @@ function Lesson(props: {
+     </div>
+-  );
++  )
+ }
+ 
+-function Challenge({ lang, navigate, openModal }: { lang: Lang; navigate: (p: Page) => void; openModal: (m: Modal) => void }) {
+-  const t = copy[lang];
+-  const [moves, setMoves] = useState([96, 97, 98, 99, 111, 112, 126, 127]);
++function Challenge({
++  lang,
++  navigate,
++  openModal,
++}: {
++  lang: Lang
++  navigate: (p: Page) => void
++  openModal: (m: Modal) => void
++}) {
++  const t = copy[lang]
++  const [moves, setMoves] = useState([96, 97, 98, 99, 111, 112, 126, 127])
+   const place = (i: number) => {
+-    setMoves((m) => [...m, i]);
+-    openModal(i === 100 ? "complete" : "challengeFail");
+-  };
++    setMoves((m) => [...m, i])
++    openModal(i === 100 ? "complete" : "challengeFail")
++  }
+   return (
+-    <div className="game-page lesson-page">
++    <div>
+       <div className="lesson-topbar">
+-        <button className="back-link" onClick={() => navigate("lessons")}><Icon name="back" />{t.backLessons}</button>
+-        <div className="challenge-count"><b>01</b><span>/ 02</span></div>
+-        <button className="text-link danger" onClick={() => navigate("lessons")}>{t.exit}</button>
++        <button className="back-link" onClick={() => navigate("lessons")}>
++          <Icon name="back" />
++          {t.backLessons}
++        </button>
++        <div className="challenge-count">
++          <b>01</b>
++          <span>/ 02</span>
++        </div>
++        <button
++          className="text-link danger"
++          onClick={() => navigate("lessons")}
++        >
++          {t.exit}
++        </button>
+       </div>
+@@ -1028,13 +1586,44 @@ function Challenge({ lang, navigate, openModal }: { lang: Lang; navigate: (p: Pa
+         <section className="board-area">
+-          <div className="board-heading"><div><span className="eyebrow accent">{t.challenge} 1 / 2</span><h1>{t.challengeObjective}</h1></div></div>
+-          <div className="board-shell"><GomokuBoard moves={moves} onMove={place} highlight={100} /></div>
++          <div className="board-heading">
++            <div>
++              <span className="eyebrow accent">{t.challenge} 1 / 2</span>
++              <h1>{t.challengeObjective}</h1>
++            </div>
++          </div>
++          <div className="board-shell">
++            <GomokuBoard moves={moves} onMove={place} highlight={100} />
++          </div>
+         </section>
+         <aside className="lesson-panel challenge-panel">
+-          <span className="mode-icon challenge-icon"><Icon name="trophy" /></span>
++          <span className="mode-icon challenge-icon">
++            <Icon name="trophy" />
++          </span>
+           <span className="eyebrow accent">{t.challenge} 1 / 2</span>
+           <h2>{t.challengeObjective}</h2>
+-          <p>{lang === "zh" ? "白棋下一步就可以連成五子。輪到黑棋，請找出唯一可以化解威脅的位置。" : "White can make five on the next move. It is Black’s turn—find the only move that stops the threat."}</p>
+-          <div className="challenge-progress"><span><i /></span><small>1 / 2</small></div>
+-          <button className="button button-secondary button-full" onClick={() => openModal("hint")}><Icon name="sound" />{t.challengeHint}</button>
+-          <div className="coach-note"><Panda small /><p>{lang === "zh" ? "望清楚白棋最長嗰條線，封住最後一個空位。" : "Look for White’s longest line and cover its last open point."}</p></div>
++          <p>
++            {lang === "zh"
++              ? "白棋下一步就可以連成五子。輪到黑棋，請找出唯一可以化解威脅的位置。"
++              : "White can make five on the next move. It is Black’s turn—find the only move that stops the threat."}
++          </p>
++          <div className="challenge-progress">
++            <span>
++              <i />
++            </span>
++            <small>1 / 2</small>
++          </div>
++          <button
++            className="button button-secondary button-full"
++            onClick={() => openModal("hint")}
++          >
++            <Icon name="sound" />
++            {t.challengeHint}
++          </button>
++          <div className="coach-note">
++            <Panda small />
++            <p>
++              {lang === "zh"
++                ? "望清楚白棋最長嗰條線，封住最後一個空位。"
++                : "Look for White’s longest line and cover its last open point."}
++            </p>
++          </div>
+         </aside>
+@@ -1042,3 +1631,3 @@ function Challenge({ lang, navigate, openModal }: { lang: Lang; navigate: (p: Pa
+     </div>
+-  );
++  )
+ }
+@@ -1046,24 +1635,33 @@ function Challenge({ lang, navigate, openModal }: { lang: Lang; navigate: (p: Pa
+ function Game(props: {
+-  lang: Lang;
+-  renju: boolean;
+-  moves: number[];
+-  setMoves: React.Dispatch<React.SetStateAction<number[]>>;
+-  difficulty: string;
+-  timer: string;
+-  setupType: string;
+-  boardStyle: string;
+-  openModal: (m: Modal) => void;
++  lang: Lang
++  renju: boolean
++  moves: number[]
++  setMoves: React.Dispatch<React.SetStateAction<number[]>>
++  difficulty: string
++  timer: string
++  setupType: string
++  boardStyle: string
++  openModal: (m: Modal) => void
+ }) {
+-  const t = copy[props.lang];
+-  const [turn, setTurn] = useState(true);
++  const t = copy[props.lang]
++  const [turn, setTurn] = useState(true)
+   const place = (i: number) => {
+-    props.setMoves((m) => [...m, i]);
+-    setTurn(!turn);
+-  };
++    props.setMoves((m) => [...m, i])
++    setTurn(!turn)
++  }
+   return (
+-    <div className="game-page active-game">
++    <div>
+       <div className="game-statusbar">
+-        <div><span className={`live-dot ${props.renju ? "renju-dot" : ""}`} />{t.gameStatus}</div>
++        <div>
++          <span className={`live-dot ${props.renju ? "renju-dot" : ""}`} />
++          {t.gameStatus}
++        </div>
+         <span>{props.renju ? t.renjuTitle : t.freeTitle}</span>
+-        <button className="text-link danger" onClick={() => props.openModal("leave")}><Icon name="flag" size={17} />{t.backHome}</button>
++        <button
++          className="text-link danger"
++          onClick={() => props.openModal("leave")}
++        >
++          <Icon name="flag" size={17} />
++          {t.backHome}
++        </button>
+       </div>
+@@ -1072,7 +1670,34 @@ function Game(props: {
+           <div className="board-heading game-heading">
+-            <div><span className={`mode-badge ${props.renju ? "renju" : ""}`}>{props.renju ? t.renju : "Gomoku"}</span><h1>{turn ? t.turn : `${t.ai} · ${t.white}`}</h1></div>
+-            <div className="turn-legend"><span><i className="legend-stone black" />{t.black} · {t.you}</span><span><i className="legend-stone white" />{t.white} · {t.ai}</span></div>
++            <div>
++              <span className={`mode-badge ${props.renju ? "renju" : ""}`}>
++                {props.renju ? t.renju : "Gomoku"}
++              </span>
++              <h1>{turn ? t.turn : `${t.ai} · ${t.white}`}</h1>
++            </div>
++            <div className="turn-legend">
++              <span>
++                <i className="legend-stone black" />
++                {t.black} · {t.you}
++              </span>
++              <span>
++                <i className="legend-stone white" />
++                {t.white} · {t.ai}
++              </span>
++            </div>
++          </div>
++          {props.renju && (
++            <div className="forbidden-banner">
++              <Icon name="flag" size={17} />
++              <b>{t.forbiddenNote}</b>
++              <span>三三 · 四四 · 長連</span>
++            </div>
++          )}
++          <div className="board-shell">
++            <GomokuBoard
++              moves={props.moves}
++              onMove={place}
++              style={props.boardStyle}
++              highlight={!props.renju ? 129 : undefined}
++            />
+           </div>
+-          {props.renju && <div className="forbidden-banner"><Icon name="flag" size={17} /><b>{t.forbiddenNote}</b><span>三三 · 四四 · 長連</span></div>}
+-          <div className="board-shell"><GomokuBoard moves={props.moves} onMove={place} style={props.boardStyle} highlight={!props.renju ? 129 : undefined} /></div>
+         </section>
+@@ -1080,18 +1705,62 @@ function Game(props: {
+           <div className="players">
+-            <div className="player active"><span className="avatar text-avatar">你</span><div><small>{t.black}</small><b>{t.you}</b></div><i /></div>
++            <div className="player active">
++              <span className="avatar text-avatar">你</span>
++              <div>
++                <small>{t.black}</small>
++                <b>{t.you}</b>
++              </div>
++              <i />
++            </div>
+             <span className="versus">VS</span>
+-            <div className="player"><span className="avatar"><Panda small /></span><div><small>{t.white}</small><b>{t.ai}</b></div></div>
++            <div className="player">
++              <span className="avatar">
++                <Panda small />
++              </span>
++              <div>
++                <small>{t.white}</small>
++                <b>{t.ai}</b>
++              </div>
++            </div>
+           </div>
+-          {props.timer !== "unlimited" && <div className="timer-card"><span>{t.timer}</span><b>00:24</b></div>}
++          {props.timer !== "unlimited" && (
++            <div className="timer-card">
++              <span>{t.timer}</span>
++              <b>00:24</b>
++            </div>
++          )}
+           <div className="detail-list">
+             <h3>{t.gameInfo}</h3>
+-            <div><span>{t.mode}</span><b>{props.renju ? t.renju : t.play}</b></div>
+-            <div><span>{t.opponent}</span><b>{props.setupType === "local" ? t.local : t.aiOpponent}</b></div>
+-            <div><span>{t.difficulty}</span><b>{props.difficulty}</b></div>
+-            <div><span>{t.timer}</span><b>{props.timer === "unlimited" ? t.unlimited : props.timer}</b></div>
++            <div>
++              <span>{t.mode}</span>
++              <b>{props.renju ? t.renju : t.play}</b>
++            </div>
++            <div>
++              <span>{t.opponent}</span>
++              <b>{props.setupType === "local" ? t.local : t.aiOpponent}</b>
++            </div>
++            <div>
++              <span>{t.difficulty}</span>
++              <b>{props.difficulty}</b>
++            </div>
++            <div>
++              <span>{t.timer}</span>
++              <b>{props.timer === "unlimited" ? t.unlimited : props.timer}</b>
++            </div>
+           </div>
+           <div className="history">
+-            <div className="panel-title"><h3>{t.moveHistory}</h3><span>{props.moves.length} {t.moves}</span></div>
++            <div className="panel-title">
++              <h3>{t.moveHistory}</h3>
++              <span>
++                {props.moves.length} {t.moves}
++              </span>
++            </div>
+             <div className="move-grid">
+-              {props.moves.map((m, i) => <span key={`${m}-${i}`}><small>{i + 1}</small><i className={i % 2 ? "white" : "black"} />{String.fromCharCode(65 + (m % 15))}{15 - Math.floor(m / 15)}</span>)}
++              {props.moves.map((m, i) => (
++                <span key={`${m}-${i}`}>
++                  <small>{i + 1}</small>
++                  <i className={i % 2 ? "white" : "black"} />
++                  {String.fromCharCode(65 + (m % 15))}
++                  {15 - Math.floor(m / 15)}
++                </span>
++              ))}
+             </div>
+@@ -1099,6 +1768,32 @@ function Game(props: {
+           <div className="game-controls">
+-            {!props.renju && props.setupType === "ai" && <button className="button button-secondary" onClick={() => props.openModal("hint")}><Icon name="bulb" />{t.hint}</button>}
+-            <button className="button button-secondary" onClick={() => props.openModal("undo")}><Icon name="undo" />{t.undo}</button>
+-            <button className="button button-ghost" onClick={() => props.openModal("restart")}><Icon name="refresh" />{t.restart}</button>
+-            <button className="button button-ghost danger-text" onClick={() => props.openModal("leave")}><Icon name="flag" />{t.backHome}</button>
++            {!props.renju && props.setupType === "ai" && (
++              <button
++                className="button button-secondary"
++                onClick={() => props.openModal("hint")}
++              >
++                <Icon name="bulb" />
++                {t.hint}
++              </button>
++            )}
++            <button
++              className="button button-secondary"
++              onClick={() => props.openModal("undo")}
++            >
++              <Icon name="undo" />
++              {t.undo}
++            </button>
++            <button
++              className="button button-ghost"
++              onClick={() => props.openModal("restart")}
++            >
++              <Icon name="refresh" />
++              {t.restart}
++            </button>
++            <button
++              className="button button-ghost danger-text"
++              onClick={() => props.openModal("leave")}
++            >
++              <Icon name="flag" />
++              {t.backHome}
++            </button>
+           </div>
+@@ -1107,7 +1802,13 @@ function Game(props: {
+     </div>
+-  );
++  )
+ }
+ 
+-function Leaderboard({ lang, navigate }: { lang: Lang; navigate: (p: Page) => void }) {
+-  const t = copy[lang];
++function Leaderboard({
++  lang,
++  navigate,
++}: {
++  lang: Lang
++  navigate: (p: Page) => void
++}) {
++  const t = copy[lang]
+   const rows = [
+@@ -1119,24 +1820,78 @@ function Leaderboard({ lang, navigate }: { lang: Lang; navigate: (p: Page) => vo
+     ["24", t.guestUser, "12", "67%", "3", "you"],
+-  ];
++  ]
+   return (
+-    <div className="page sub-page">
+-      <PageIntro eyebrow={t.leaderboard} title={t.rankingTitle} body={t.rankingSub} back={t.backHome} onBack={() => navigate("home")} />
++    <div>
++      <PageIntro
++        eyebrow={t.leaderboard}
++        title={t.rankingTitle}
++        body={t.rankingSub}
++        back={t.backHome}
++        onBack={() => navigate("home")}
++      />
+       <section className="content-section leaderboard-section">
+-        <div className="tabs"><button className="active">{t.overall}</button><button>{t.weekly}</button><button>{t.friends}</button></div>
++        <div className="tabs">
++          <button className="active">{t.overall}</button>
++          <button>{t.weekly}</button>
++          <button>{t.friends}</button>
++        </div>
+         <div className="podium">
+-          {[rows[1], rows[0], rows[2]].map((r, i) => <div className={`podium-card p-${i}`} key={r[0]}><span className="rank-medal">{r[0]}</span><span className="avatar text-avatar">{r[1].slice(0, 1)}</span><b>{r[1]}</b><small>{r[2]} {t.wins}</small><i /></div>)}
++          {[rows[1], rows[0], rows[2]].map((r, i) => (
++            <div className={`podium-card p-${i}`} key={r[0]}>
++              <span className="rank-medal">{r[0]}</span>
++              <span className="avatar text-avatar">{r[1].slice(0, 1)}</span>
++              <b>{r[1]}</b>
++              <small>
++                {r[2]} {t.wins}
++              </small>
++              <i />
++            </div>
++          ))}
+         </div>
+         <div className="table-card">
+-          <div className="table-row table-head"><span>{t.rank}</span><span>{t.player}</span><span>{t.wins}</span><span>{t.winRate}</span><span>{t.winStreak}</span></div>
+-          {rows.map((r) => <div className={`table-row ${r[5]}`} key={r[0]}><span className="rank-cell">{r[0]}</span><span className="player-cell"><i className="avatar text-avatar">{r[1].slice(0, 1)}</i><b>{r[1]}</b>{r[5] === "you" && <small>{t.you}</small>}</span><span>{r[2]}</span><span>{r[3]}</span><span>× {r[4]}</span></div>)}
++          <div className="table-row table-head">
++            <span>{t.rank}</span>
++            <span>{t.player}</span>
++            <span>{t.wins}</span>
++            <span>{t.winRate}</span>
++            <span>{t.winStreak}</span>
++          </div>
++          {rows.map((r) => (
++            <div className={`table-row ${r[5]}`} key={r[0]}>
++              <span className="rank-cell">{r[0]}</span>
++              <span className="player-cell">
++                <i className="avatar text-avatar">{r[1].slice(0, 1)}</i>
++                <b>{r[1]}</b>
++                {r[5] === "you" && <small>{t.you}</small>}
++              </span>
++              <span>{r[2]}</span>
++              <span>{r[3]}</span>
++              <span>× {r[4]}</span>
+             </div>
+-        <button className="button button-secondary load-button">{t.load}</button>
++          ))}
++        </div>
++        <button className="button button-secondary load-button">
++          {t.load}
++        </button>
+       </section>
+     </div>
+-  );
++  )
+ }
+ 
+-function Profile({ lang, openModal, navigate }: { lang: Lang; openModal: (m: Modal) => void; navigate: (p: Page) => void }) {
+-  const t = copy[lang];
+-  const stats = [[t.wins, "12"], [t.losses, "5"], [t.draws, "1"], [t.winRate, "67%"], [t.lessonsCompleted, "3/8"]];
++function Profile({
++  lang,
++  openModal,
++  navigate,
++}: {
++  lang: Lang
++  openModal: (m: Modal) => void
++  navigate: (p: Page) => void
++}) {
++  const t = copy[lang]
++  const stats = [
++    [t.wins, "12"],
++    [t.losses, "5"],
++    [t.draws, "1"],
++    [t.winRate, "67%"],
++    [t.lessonsCompleted, "3/8"],
++  ]
+   const games = [
+@@ -1146,16 +1901,80 @@ function Profile({ lang, openModal, navigate }: { lang: Lang; openModal: (m: Mod
+     [t.play, t.local, t.draw, "2025.04.08", "71"],
+-  ];
++  ]
+   return (
+-    <div className="page sub-page">
+-      <PageIntro eyebrow={t.records} title={t.profileTitle} body={t.profileSub} back={t.backHome} onBack={() => navigate("home")} />
++    <div>
++      <PageIntro
++        eyebrow={t.records}
++        title={t.profileTitle}
++        body={t.profileSub}
++        back={t.backHome}
++        onBack={() => navigate("home")}
++      />
+       <section className="content-section profile-section">
+         <div className="profile-card">
+-          <span className="profile-avatar"><Panda /></span>
+-          <div><span className="status-pill current">{t.guestTag}</span><h2>{t.guestUser}</h2><p>{t.createPrompt}</p></div>
+-          <button className="button button-primary" onClick={() => openModal("signup")}>{t.createAccount}</button>
++          <span className="profile-avatar">
++            <Panda />
++          </span>
++          <div>
++            <span className="status-pill current">{t.guestTag}</span>
++            <h2>{t.guestUser}</h2>
++            <p>{t.createPrompt}</p>
++          </div>
++          <button
++            className="button button-primary"
++            onClick={() => openModal("signup")}
++          >
++            {t.createAccount}
++          </button>
++        </div>
++        <div className="stats-grid">
++          {stats.map(([label, val], i) => (
++            <article key={label}>
++              <span className="stat-icon">
++                <Icon name={i === 4 ? "book" : i === 3 ? "trophy" : "play"} />
++              </span>
++              <b>{val}</b>
++              <small>{label}</small>
++            </article>
++          ))}
+         </div>
+-        <div className="stats-grid">{stats.map(([label, val], i) => <article key={label}><span className={`stat-icon s-${i}`}><Icon name={i === 4 ? "book" : i === 3 ? "trophy" : "play"} /></span><b>{val}</b><small>{label}</small></article>)}</div>
+         <div className="records-card">
+-          <div className="panel-title"><h2>{t.recentGames}</h2><button className="text-link" onClick={() => navigate("settings")}>{t.accountSettings}<Icon name="arrow" size={16} /></button></div>
+-          {games.map((g, i) => <div className="record-row" key={i}><span className={`result-mark ${g[2] === t.won ? "win" : g[2] === t.lost ? "loss" : ""}`}>{g[2].slice(0, 1)}</span><div><b>{g[0]}</b><small>{g[1]}</small></div><span className={`result-text ${g[2] === t.won ? "win" : g[2] === t.lost ? "loss" : ""}`}>{g[2]}</span><span>{g[3]}</span><span>{g[4]} {t.moves}</span><button className="icon-button" onClick={() => openModal("record")}><Icon name="arrow" /></button></div>)}
++          <div className="panel-title">
++            <h2>{t.recentGames}</h2>
++            <button className="text-link" onClick={() => navigate("settings")}>
++              {t.accountSettings}
++              <Icon name="arrow" size={16} />
++            </button>
++          </div>
++          {games.map((g, i) => (
++            <div className="record-row" key={i}>
++              <span
++                className={`result-mark ${
++                  g[2] === t.won ? "win" : g[2] === t.lost ? "loss" : ""
++                }`}
++              >
++                {g[2].slice(0, 1)}
++              </span>
++              <div>
++                <b>{g[0]}</b>
++                <small>{g[1]}</small>
++              </div>
++              <span
++                className={`result-text ${
++                  g[2] === t.won ? "win" : g[2] === t.lost ? "loss" : ""
++                }`}
++              >
++                {g[2]}
++              </span>
++              <span>{g[3]}</span>
++              <span>
++                {g[4]} {t.moves}
++              </span>
++              <button
++                className="icon-button"
++                onClick={() => openModal("record")}
++              >
++                <Icon name="arrow" />
++              </button>
++            </div>
++          ))}
+         </div>
+@@ -1163,26 +1982,140 @@ function Profile({ lang, openModal, navigate }: { lang: Lang; openModal: (m: Mod
+     </div>
+-  );
++  )
+ }
+ 
+-function Settings(props: { lang: Lang; theme: Theme; setLang: (l: Lang) => void; setTheme: (t: Theme) => void; boardStyle: string; setBoardStyle: (s: string) => void; navigate: (p: Page) => void; saved: () => void }) {
+-  const t = copy[props.lang];
+-  const [sound, setSound] = useState(true);
+-  const [tts, setTts] = useState(true);
++function Settings(props: {
++  lang: Lang
++  theme: Theme
++  setLang: (l: Lang) => void
++  setTheme: (t: Theme) => void
++  boardStyle: string
++  setBoardStyle: (s: string) => void
++  navigate: (p: Page) => void
++  saved: () => void
++}) {
++  const t = copy[props.lang]
++  const [sound, setSound] = useState(true)
++  const [tts, setTts] = useState(true)
+   return (
+-    <div className="page sub-page">
+-      <PageIntro eyebrow={t.settings} title={t.settingsTitle} body={t.settingsSub} back={t.backHome} onBack={() => props.navigate("home")} />
++    <div>
++      <PageIntro
++        eyebrow={t.settings}
++        title={t.settingsTitle}
++        body={t.settingsSub}
++        back={t.backHome}
++        onBack={() => props.navigate("home")}
++      />
+       <section className="content-section settings-section">
+         <div className="settings-card">
+-          <SettingRow icon="globe" title={t.language} body={props.lang === "zh" ? "顯示所有導覽、按鈕及訊息的語言。" : "Language used for navigation, buttons and messages."}>
+-            <div className="segmented"><button className={props.lang === "zh" ? "active" : ""} onClick={() => props.setLang("zh")}>繁體中文</button><button className={props.lang === "en" ? "active" : ""} onClick={() => props.setLang("en")}>English</button></div>
++          <SettingRow
++            icon="globe"
++            title={t.language}
++            body={
++              props.lang === "zh"
++                ? "顯示所有導覽、按鈕及訊息的語言。"
++                : "Language used for navigation, buttons and messages."
++            }
++          >
++            <div className="segmented">
++              <button
++                className={props.lang === "zh" ? "active" : ""}
++                onClick={() => props.setLang("zh")}
++              >
++                繁體中文
++              </button>
++              <button
++                className={props.lang === "en" ? "active" : ""}
++                onClick={() => props.setLang("en")}
++              >
++                English
++              </button>
++            </div>
++          </SettingRow>
++          <SettingRow
++            icon={props.theme === "light" ? "sun" : "moon"}
++            title={t.appearance}
++            body={
++              props.lang === "zh"
++                ? "選擇最舒適的閱讀模式。"
++                : "Choose the viewing mode most comfortable for you."
++            }
++          >
++            <div className="theme-options">
++              <button
++                className={props.theme === "light" ? "active" : ""}
++                onClick={() => props.setTheme("light")}
++              >
++                <span className="theme-preview light-preview">
++                  <i />
++                  <i />
++                </span>
++                <b>{t.light}</b>
++              </button>
++              <button
++                className={props.theme === "dark" ? "active" : ""}
++                onClick={() => props.setTheme("dark")}
++              >
++                <span className="theme-preview dark-preview">
++                  <i />
++                  <i />
++                </span>
++                <b>{t.dark}</b>
++              </button>
++            </div>
++          </SettingRow>
++          <SettingRow
++            icon="play"
++            title={t.boardStyle}
++            body={
++              props.lang === "zh"
++                ? "棋盤風格會套用至所有對局。"
++                : "Your board style applies to every game."
++            }
++          >
++            <div className="board-options">
++              {[
++                ["wood", t.wood],
++                ["classic", t.classic],
++                ["minimal", t.minimal],
++              ].map(([id, label]) => (
++                <button
++                  className={props.boardStyle === id ? "active" : ""}
++                  onClick={() => props.setBoardStyle(id)}
++                  key={id}
++                >
++                  <span className={`board-preview ${id}`} />
++                  {label}
++                  <i>
++                    {props.boardStyle === id && <Icon name="check" size={13} />}
++                  </i>
++                </button>
++              ))}
++            </div>
+           </SettingRow>
+-          <SettingRow icon={props.theme === "light" ? "sun" : "moon"} title={t.appearance} body={props.lang === "zh" ? "選擇最舒適的閱讀模式。" : "Choose the viewing mode most comfortable for you."}>
+-            <div className="theme-options"><button className={props.theme === "light" ? "active" : ""} onClick={() => props.setTheme("light")}><span className="theme-preview light-preview"><i /><i /></span><b>{t.light}</b></button><button className={props.theme === "dark" ? "active" : ""} onClick={() => props.setTheme("dark")}><span className="theme-preview dark-preview"><i /><i /></span><b>{t.dark}</b></button></div>
++          <SettingRow
++            icon="sound"
++            title={t.sound}
++            body={
++              props.lang === "zh"
++                ? "落子、勝出及介面提示音效。"
++                : "Move, victory and interface sound effects."
++            }
++          >
++            <Toggle value={sound} setValue={setSound} />
+           </SettingRow>
+-          <SettingRow icon="play" title={t.boardStyle} body={props.lang === "zh" ? "棋盤風格會套用至所有對局。" : "Your board style applies to every game."}>
+-            <div className="board-options">{[["wood", t.wood], ["classic", t.classic], ["minimal", t.minimal]].map(([id, label]) => <button className={props.boardStyle === id ? "active" : ""} onClick={() => props.setBoardStyle(id)} key={id}><span className={`board-preview ${id}`} />{label}<i>{props.boardStyle === id && <Icon name="check" size={13} />}</i></button>)}</div>
++          <SettingRow icon="sound" title={t.tts} body={t.ttsNote}>
++            <Toggle value={tts} setValue={setTts} />
+           </SettingRow>
+-          <SettingRow icon="sound" title={t.sound} body={props.lang === "zh" ? "落子、勝出及介面提示音效。" : "Move, victory and interface sound effects."}><Toggle value={sound} setValue={setSound} /></SettingRow>
+-          <SettingRow icon="sound" title={t.tts} body={t.ttsNote}><Toggle value={tts} setValue={setTts} /></SettingRow>
+-          <div className="settings-actions"><button className="button button-ghost" onClick={() => props.navigate("home")}>{t.cancel}</button><button className="button button-primary" onClick={props.saved}><Icon name="check" />{t.save}</button></div>
++          <div className="settings-actions">
++            <button
++              className="button button-ghost"
++              onClick={() => props.navigate("home")}
++            >
++              {t.cancel}
++            </button>
++            <button className="button button-primary" onClick={props.saved}>
++              <Icon name="check" />
++              {t.save}
++            </button>
++          </div>
+         </div>
+@@ -1190,17 +2123,83 @@ function Settings(props: { lang: Lang; theme: Theme; setLang: (l: Lang) => void;
+     </div>
+-  );
++  )
+ }
+ 
+-function SettingRow({ icon, title, body, children }: { icon: string; title: string; body: string; children: React.ReactNode }) {
+-  return <div className="setting-row"><span className="setting-icon"><Icon name={icon} /></span><div className="setting-copy"><b>{title}</b><p>{body}</p></div><div className="setting-control">{children}</div></div>;
++function SettingRow({
++  icon,
++  title,
++  body,
++  children,
++}: {
++  icon: string
++  title: string
++  body: string
++  children: React.ReactNode
++}) {
++  return (
++    <div className="setting-row">
++      <span className="setting-icon">
++        <Icon name={icon} />
++      </span>
++      <div className="setting-copy">
++        <b>{title}</b>
++        <p>{body}</p>
++      </div>
++      <div className="setting-control">{children}</div>
++    </div>
++  )
+ }
+ 
+-function Toggle({ value, setValue }: { value: boolean; setValue: (v: boolean) => void }) {
+-  return <button className={`toggle ${value ? "on" : ""}`} onClick={() => setValue(!value)} aria-pressed={value}><i /></button>;
++function Toggle({
++  value,
++  setValue,
++}: {
++  value: boolean
++  setValue: (v: boolean) => void
++}) {
++  return (
++    <button
++      className={`toggle ${value ? "on" : ""}`}
++      onClick={() => setValue(!value)}
++      aria-pressed={value}
++    >
++      <i />
++    </button>
++  )
+ }
+ 
+-function MobileNav({ page, lang, navigate, openSetup }: { page: Page; lang: Lang; navigate: (p: Page) => void; openSetup: (r: boolean) => void }) {
+-  const t = copy[lang];
+-  const items = [["home", "home", t.home], ["lessons", "book", t.teaching], ["play", "play", t.play], ["leaderboard", "trophy", t.leaderboard], ["profile", "user", t.records]];
+-  return <nav className="mobile-nav">{items.map(([id, icon, label]) => <button key={id} className={page === id ? "active" : ""} onClick={() => id === "play" ? openSetup(false) : navigate(id as Page)}><Icon name={icon} size={20} /><span>{label}</span></button>)}</nav>;
++function MobileNav({
++  page,
++  lang,
++  navigate,
++  openSetup,
++}: {
++  page: Page
++  lang: Lang
++  navigate: (p: Page) => void
++  openSetup: (r: boolean) => void
++}) {
++  const t = copy[lang]
++  const items = [
++    ["home", "home", t.home],
++    ["lessons", "book", t.teaching],
++    ["play", "play", t.play],
++    ["leaderboard", "trophy", t.leaderboard],
++    ["profile", "user", t.records],
++  ]
++  return (
++    <nav className="mobile-nav">
++      {items.map(([id, icon, label]) => (
++        <button
++          key={id}
++          className={page === id ? "active" : ""}
++          onClick={() =>
++            id === "play" ? openSetup(false) : navigate(id as Page)
++          }
++        >
++          <Icon name={icon} size={20} />
++          <span>{label}</span>
++        </button>
++      ))}
++    </nav>
++  )
+ }
+@@ -1208,72 +2207,229 @@ function MobileNav({ page, lang, navigate, openSetup }: { page: Page; lang: Lang
+ function ModalLayer(props: {
+-  modal: Exclude<Modal, null>;
+-  lang: Lang;
+-  close: () => void;
+-  navigate: (p: Page) => void;
+-  notify: (s: string) => void;
+-  renju: boolean;
+-  setupType: "ai" | "local";
+-  setSetupType: (s: "ai" | "local") => void;
+-  difficulty: string;
+-  setDifficulty: (s: string) => void;
+-  firstMove: string;
+-  setFirstMove: (s: string) => void;
+-  timer: string;
+-  setTimer: (s: string) => void;
+-  startGame: () => void;
+-  logout: () => void;
+-  undo: () => void;
++  modal: Exclude<Modal, null>
++  lang: Lang
++  close: () => void
++  navigate: (p: Page) => void
++  notify: (s: string) => void
++  renju: boolean
++  setupType: "ai" | "local"
++  setSetupType: (s: "ai" | "local") => void
++  difficulty: string
++  setDifficulty: (s: string) => void
++  firstMove: string
++  setFirstMove: (s: string) => void
++  timer: string
++  setTimer: (s: string) => void
++  startGame: () => void
++  logout: () => void
++  undo: () => void
+ }) {
+-  const t = copy[props.lang];
+-  const [sent, setSent] = useState(false);
+-  const [formError, setFormError] = useState("");
+-  const [fields, setFields] = useState({ name: "", email: "", password: "", confirm: "" });
++  const t = copy[props.lang]
++  const [sent, setSent] = useState(false)
++  const [formError, setFormError] = useState("")
++  const [fields, setFields] = useState({
++    name: "",
++    email: "",
++    password: "",
++    confirm: "",
++  })
+   const titleMap: Partial<Record<Exclude<Modal, null>, string>> = {
+-    logout: t.logoutTitle, hint: t.hintTitle, undo: t.undoTitle, restart: t.restartTitle,
+-    leave: t.leaveTitle, correct: t.correctTitle, incorrect: t.incorrectTitle, challengeFail: t.challengeFailTitle, complete: t.finishTitle,
++    logout: t.logoutTitle,
++    hint: t.hintTitle,
++    undo: t.undoTitle,
++    restart: t.restartTitle,
++    leave: t.leaveTitle,
++    correct: t.correctTitle,
++    incorrect: t.incorrectTitle,
++    challengeFail: t.challengeFailTitle,
++    complete: t.finishTitle,
+     record: t.recordTitle,
+-  };
++  }
+   const bodyMap: Partial<Record<Exclude<Modal, null>, string>> = {
+-    logout: t.logoutBody, hint: t.hintBody, undo: t.undoBody, restart: t.restartBody,
+-    leave: t.leaveBody, correct: t.correctBody, incorrect: t.incorrectBody, challengeFail: t.challengeFailBody, complete: t.finishBody,
+-  };
++    logout: t.logoutBody,
++    hint: t.hintBody,
++    undo: t.undoBody,
++    restart: t.restartBody,
++    leave: t.leaveBody,
++    correct: t.correctBody,
++    incorrect: t.incorrectBody,
++    challengeFail: t.challengeFailBody,
++    complete: t.finishBody,
++  }
+ 
+-  if (props.modal === "setup") return (
+-    <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && props.close()}>
++  if (props.modal === "setup")
++    return (
++      <div
++        className="modal-overlay"
++        onMouseDown={(e) => e.target === e.currentTarget && props.close()}
++      >
+         <div className="modal setup-modal" role="dialog" aria-modal="true">
+-        <ModalHeader title={props.renju ? t.setupRenjuTitle : t.setupTitle} eyebrow={props.renju ? t.renjuTitle : t.freeTitle} close={props.close} />
+-        {props.renju && <div className="rules-callout"><span><Icon name="flag" /></span><div><b>{t.rules}</b><p>{t.rulesText}</p></div></div>}
+-        <OptionGroup label={t.opponent}><Choice active={props.setupType === "ai"} onClick={() => props.setSetupType("ai")} icon="play" title={t.aiOpponent} /><Choice active={props.setupType === "local"} onClick={() => props.setSetupType("local")} icon="user" title={t.local} /></OptionGroup>
+-        {props.setupType === "ai" ? <>
+-          <OptionGroup label={t.difficulty}><Pills values={["Easy", "Medium", "Hard"]} active={props.difficulty} setActive={props.setDifficulty} /></OptionGroup>
+-          <OptionGroup label={t.firstMove}><Pills values={[t.random, t.playerFirst, t.aiFirst]} ids={["random", "player", "ai"]} active={props.firstMove} setActive={props.setFirstMove} /></OptionGroup>
+-          <OptionGroup label={t.timer}><Pills values={[t.seconds30, t.seconds60, t.unlimited]} ids={["30", "60", "unlimited"]} active={props.timer} setActive={props.setTimer} /></OptionGroup>
+-          {!props.renju && <div className="hint-setting"><span><b>{t.hintsOn}</b><small>{props.lang === "zh" ? "對局期間可向阿棋求助" : "Ask Ah Kei for help during the game"}</small></span><Toggle value={true} setValue={() => {}} /></div>}
+-        </> : <div className="info-note">{t.localNote}</div>}
+-        <div className="modal-actions"><button className="button button-ghost" onClick={props.close}>{t.cancel}</button><button className="button button-primary" onClick={props.startGame}>{props.renju ? t.startRenju : t.startGame}<Icon name="arrow" /></button></div>
+-      </div>
+-    </div>
+-  );
++          <ModalHeader
++            title={props.renju ? t.setupRenjuTitle : t.setupTitle}
++            eyebrow={props.renju ? t.renjuTitle : t.freeTitle}
++            close={props.close}
++          />
++          {props.renju && (
++            <div className="rules-callout">
++              <span>
++                <Icon name="flag" />
++              </span>
++              <div>
++                <b>{t.rules}</b>
++                <p>{t.rulesText}</p>
++              </div>
++            </div>
++          )}
++          <OptionGroup label={t.opponent}>
++            <Choice
++              active={props.setupType === "ai"}
++              onClick={() => props.setSetupType("ai")}
++              icon="play"
++              title={t.aiOpponent}
++            />
++            <Choice
++              active={props.setupType === "local"}
++              onClick={() => props.setSetupType("local")}
++              icon="user"
++              title={t.local}
++            />
++          </OptionGroup>
++          {props.setupType === "ai" ? (
++            <>
++              <OptionGroup label={t.difficulty}>
++                <Pills
++                  values={["Easy", "Medium", "Hard"]}
++                  active={props.difficulty}
++                  setActive={props.setDifficulty}
++                />
++              </OptionGroup>
++              <OptionGroup label={t.firstMove}>
++                <Pills
++                  values={[t.random, t.playerFirst, t.aiFirst]}
++                  ids={["random", "player", "ai"]}
++                  active={props.firstMove}
++                  setActive={props.setFirstMove}
++                />
++              </OptionGroup>
++              <OptionGroup label={t.timer}>
++                <Pills
++                  values={[t.seconds30, t.seconds60, t.unlimited]}
++                  ids={["30", "60", "unlimited"]}
++                  active={props.timer}
++                  setActive={props.setTimer}
++                />
++              </OptionGroup>
++              {!props.renju && (
++                <div className="hint-setting">
++                  <span>
++                    <b>{t.hintsOn}</b>
++                    <small>
++                      {props.lang === "zh"
++                        ? "對局期間可向阿棋求助"
++                        : "Ask Ah Kei for help during the game"}
++                    </small>
++                  </span>
++                  <Toggle value={true} setValue={() => {}} />
++                </div>
++              )}
++            </>
++          ) : (
++            <div className="info-note">{t.localNote}</div>
++          )}
++          <div className="modal-actions">
++            <button className="button button-ghost" onClick={props.close}>
++              {t.cancel}
++            </button>
++            <button className="button button-primary" onClick={props.startGame}>
++              {props.renju ? t.startRenju : t.startGame}
++              <Icon name="arrow" />
++            </button>
++          </div>
++        </div>
++      </div>
++    )
+ 
+   if (props.modal === "signup" || props.modal === "forgot") {
+-    const signup = props.modal === "signup";
++    const signup = props.modal === "signup"
+     const submit = () => {
+-      if (!fields.email || (signup && (!fields.name || !fields.password || !fields.confirm))) return setFormError(t.required);
+-      if (!fields.email.includes("@")) return setFormError(t.invalidEmail);
+-      if (signup && fields.password !== fields.confirm) return setFormError(t.passwordMismatch);
+-      setFormError("");
+-      setSent(true);
+-      props.notify(signup ? t.accountCreated : t.resetSent);
+-    };
+-    return <div className="modal-overlay"><div className="modal form-modal" role="dialog" aria-modal="true">
+-      <ModalHeader title={signup ? t.signupTitle : t.forgotTitle} eyebrow={signup ? t.createAccount : t.forgot} close={props.close} />
+-      {sent ? <div className="success-state"><span><Icon name="check" size={30} /></span><h3>{signup ? t.accountCreated : t.resetSent}</h3><button className="button button-primary" onClick={props.close}>{t.continue}</button></div> : <>
+-        <p className="modal-intro">{signup ? t.signupSub : (props.lang === "zh" ? "輸入你的電郵，我們會發送安全的重設連結。" : "Enter your email and we’ll send you a secure reset link.")}</p>
+-        {signup && <ModalField label={t.name} value={fields.name} setValue={(v) => setFields({ ...fields, name: v })} />}
+-        <ModalField label={t.email} value={fields.email} setValue={(v) => setFields({ ...fields, email: v })} />
+-        {signup && <><ModalField label={t.password} value={fields.password} setValue={(v) => setFields({ ...fields, password: v })} password /><ModalField label={t.confirmPassword} value={fields.confirm} setValue={(v) => setFields({ ...fields, confirm: v })} password /></>}
++      if (
++        !fields.email ||
++        (signup && (!fields.name || !fields.password || !fields.confirm))
++      )
++        return setFormError(t.required)
++      if (!fields.email.includes("@")) return setFormError(t.invalidEmail)
++      if (signup && fields.password !== fields.confirm)
++        return setFormError(t.passwordMismatch)
++      setFormError("")
++      setSent(true)
++      props.notify(signup ? t.accountCreated : t.resetSent)
++    }
++    return (
++      <div className="modal-overlay">
++        <div className="modal form-modal" role="dialog" aria-modal="true">
++          <ModalHeader
++            title={signup ? t.signupTitle : t.forgotTitle}
++            eyebrow={signup ? t.createAccount : t.forgot}
++            close={props.close}
++          />
++          {sent ? (
++            <div className="success-state">
++              <span>
++                <Icon name="check" size={30} />
++              </span>
++              <h3>{signup ? t.accountCreated : t.resetSent}</h3>
++              <button className="button button-primary" onClick={props.close}>
++                {t.continue}
++              </button>
++            </div>
++          ) : (
++            <>
++              <p className="modal-intro">
++                {signup
++                  ? t.signupSub
++                  : props.lang === "zh"
++                    ? "輸入你的電郵，我們會發送安全的重設連結。"
++                    : "Enter your email and we’ll send you a secure reset link."}
++              </p>
++              {signup && (
++                <ModalField
++                  label={t.name}
++                  value={fields.name}
++                  setValue={(v) => setFields({ ...fields, name: v })}
++                />
++              )}
++              <ModalField
++                label={t.email}
++                value={fields.email}
++                setValue={(v) => setFields({ ...fields, email: v })}
++              />
++              {signup && (
++                <>
++                  <ModalField
++                    label={t.password}
++                    value={fields.password}
++                    setValue={(v) => setFields({ ...fields, password: v })}
++                    password
++                  />
++                  <ModalField
++                    label={t.confirmPassword}
++                    value={fields.confirm}
++                    setValue={(v) => setFields({ ...fields, confirm: v })}
++                    password
++                  />
++                </>
++              )}
+               {formError && <div className="form-error">{formError}</div>}
+-        <div className="modal-actions"><button className="button button-ghost" onClick={props.close}>{t.cancel}</button><button className="button button-primary" onClick={submit}>{signup ? t.create : t.sendLink}</button></div>
+-      </>}
+-    </div></div>;
++              <div className="modal-actions">
++                <button className="button button-ghost" onClick={props.close}>
++                  {t.cancel}
++                </button>
++                <button className="button button-primary" onClick={submit}>
++                  {signup ? t.create : t.sendLink}
++                </button>
++              </div>
++            </>
++          )}
++        </div>
++      </div>
++    )
+   }
+@@ -1281,22 +2437,164 @@ function ModalLayer(props: {
+   const actions: Record<string, React.ReactNode> = {
+-    logout: <><button className="button button-ghost" onClick={props.close}>{t.cancel}</button><button className="button button-danger" onClick={props.logout}>{t.logout}</button></>,
+-    hint: <button className="button button-primary" onClick={props.close}>{t.gotIt}</button>,
+-    undo: <><button className="button button-ghost" onClick={props.close}>{t.cancel}</button><button className="button button-primary" onClick={props.undo}>{t.undo}</button></>,
+-    restart: <><button className="button button-ghost" onClick={props.close}>{t.cancel}</button><button className="button button-primary" onClick={() => { props.close(); props.startGame(); }}>{t.restart}</button></>,
+-    leave: <><button className="button button-ghost" onClick={props.close}>{t.keepPlaying}</button><button className="button button-danger" onClick={() => props.navigate("home")}>{t.leaveGame}</button></>,
+-    correct: <button className="button button-primary" onClick={props.close}>{t.continue}<Icon name="arrow" /></button>,
+-    incorrect: <><button className="button button-ghost" onClick={props.close}>{t.tryAgain}</button><button className="button button-primary" onClick={props.close}>{t.showAnswer}</button></>,
+-    challengeFail: <><button className="button button-ghost" onClick={props.close}>{t.tryAgain}</button><button className="button button-primary" onClick={() => props.navigate("home")}>{t.freePlay}</button></>,
+-    complete: <><button className="button button-ghost" onClick={() => props.navigate("home")}>{t.backHome}</button><button className="button button-primary" onClick={() => { props.close(); props.navigate("home"); }}>{t.freePlay}</button></>,
+-    record: <button className="button button-primary" onClick={props.close}>{t.gotIt}</button>,
+-  };
++    logout: (
++      <>
++        <button className="button button-ghost" onClick={props.close}>
++          {t.cancel}
++        </button>
++        <button className="button button-danger" onClick={props.logout}>
++          {t.logout}
++        </button>
++      </>
++    ),
++    hint: (
++      <button className="button button-primary" onClick={props.close}>
++        {t.gotIt}
++      </button>
++    ),
++    undo: (
++      <>
++        <button className="button button-ghost" onClick={props.close}>
++          {t.cancel}
++        </button>
++        <button className="button button-primary" onClick={props.undo}>
++          {t.undo}
++        </button>
++      </>
++    ),
++    restart: (
++      <>
++        <button className="button button-ghost" onClick={props.close}>
++          {t.cancel}
++        </button>
++        <button
++          className="button button-primary"
++          onClick={() => {
++            props.close()
++            props.startGame()
++          }}
++        >
++          {t.restart}
++        </button>
++      </>
++    ),
++    leave: (
++      <>
++        <button className="button button-ghost" onClick={props.close}>
++          {t.keepPlaying}
++        </button>
++        <button
++          className="button button-danger"
++          onClick={() => props.navigate("home")}
++        >
++          {t.leaveGame}
++        </button>
++      </>
++    ),
++    correct: (
++      <button className="button button-primary" onClick={props.close}>
++        {t.continue}
++        <Icon name="arrow" />
++      </button>
++    ),
++    incorrect: (
++      <>
++        <button className="button button-ghost" onClick={props.close}>
++          {t.tryAgain}
++        </button>
++        <button className="button button-primary" onClick={props.close}>
++          {t.showAnswer}
++        </button>
++      </>
++    ),
++    challengeFail: (
++      <>
++        <button className="button button-ghost" onClick={props.close}>
++          {t.tryAgain}
++        </button>
++        <button
++          className="button button-primary"
++          onClick={() => props.navigate("home")}
++        >
++          {t.freePlay}
++        </button>
++      </>
++    ),
++    complete: (
++      <>
++        <button
++          className="button button-ghost"
++          onClick={() => props.navigate("home")}
++        >
++          {t.backHome}
++        </button>
++        <button
++          className="button button-primary"
++          onClick={() => {
++            props.close()
++            props.navigate("home")
++          }}
++        >
++          {t.freePlay}
++        </button>
++      </>
++    ),
++    record: (
++      <button className="button button-primary" onClick={props.close}>
++        {t.gotIt}
++      </button>
++    ),
++  }
+   return (
+-    <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && props.close()}>
++    <div
++      className="modal-overlay"
++      onMouseDown={(e) => e.target === e.currentTarget && props.close()}
++    >
+       <div className="modal feedback-modal" role="dialog" aria-modal="true">
+-        <button className="modal-close" onClick={props.close}><Icon name="close" /></button>
+-        <div className={`feedback-icon ${props.modal}`}><Icon name={props.modal === "hint" ? "bulb" : props.modal === "incorrect" || props.modal === "challengeFail" || props.modal === "leave" || props.modal === "logout" ? "flag" : props.modal === "record" ? "play" : "check"} size={28} /></div>
++        <button className="modal-close" onClick={props.close}>
++          <Icon name="close" />
++        </button>
++        <div className={`feedback-icon ${props.modal}`}>
++          <Icon
++            name={
++              props.modal === "hint"
++                ? "bulb"
++                : props.modal === "incorrect" ||
++                    props.modal === "challengeFail" ||
++                    props.modal === "leave" ||
++                    props.modal === "logout"
++                  ? "flag"
++                  : props.modal === "record"
++                    ? "play"
++                    : "check"
++            }
++            size={28}
++          />
++        </div>
+         <h2>{titleMap[props.modal]}</h2>
+         <p>{bodyMap[props.modal]}</p>
+-        {props.modal === "hint" && <div className="hint-coordinate"><b>H8</b><span>{t.openThree}</span></div>}
+-        {props.modal === "record" && <div className="record-summary"><div><span>{t.result}</span><b>{t.won}</b></div><div><span>{t.mode}</span><b>Gomoku · AI</b></div><div><span>{t.moves}</span><b>42</b></div><div><span>{t.duration}</span><b>08:42</b></div></div>}
++        {props.modal === "hint" && (
++          <div className="hint-coordinate">
++            <b>H8</b>
++            <span>{t.openThree}</span>
++          </div>
++        )}
++        {props.modal === "record" && (
++          <div className="record-summary">
++            <div>
++              <span>{t.result}</span>
++              <b>{t.won}</b>
++            </div>
++            <div>
++              <span>{t.mode}</span>
++              <b>Gomoku · AI</b>
++            </div>
++            <div>
++              <span>{t.moves}</span>
++              <b>42</b>
++            </div>
++            <div>
++              <span>{t.duration}</span>
++              <b>08:42</b>
++            </div>
++          </div>
++        )}
+         <div className="modal-actions centered">{actions[props.modal]}</div>
+@@ -1304,25 +2602,116 @@ function ModalLayer(props: {
+     </div>
+-  );
++  )
+ }
+ 
+-function ModalHeader({ title, eyebrow, close }: { title: string; eyebrow: string; close: () => void }) {
+-  return <div className="modal-header"><div><span className="eyebrow accent">{eyebrow}</span><h2>{title}</h2></div><button className="modal-close static" onClick={close}><Icon name="close" /></button></div>;
++function ModalHeader({
++  title,
++  eyebrow,
++  close,
++}: {
++  title: string
++  eyebrow: string
++  close: () => void
++}) {
++  return (
++    <div className="modal-header">
++      <div>
++        <span className="eyebrow accent">{eyebrow}</span>
++        <h2>{title}</h2>
++      </div>
++      <button className="modal-close static" onClick={close}>
++        <Icon name="close" />
++      </button>
++    </div>
++  )
+ }
+ 
+-function ModalField({ label, value, setValue, password = false }: { label: string; value: string; setValue: (s: string) => void; password?: boolean }) {
+-  return <label className="field-label">{label}<span className="input-wrap"><Icon name={password ? "lock" : "user"} size={18} /><input value={value} onChange={(e) => setValue(e.target.value)} type={password ? "password" : "text"} /></span></label>;
++function ModalField({
++  label,
++  value,
++  setValue,
++  password = false,
++}: {
++  label: string
++  value: string
++  setValue: (s: string) => void
++  password?: boolean
++}) {
++  return (
++    <label className="field-label">
++      {label}
++      <span className="input-wrap">
++        <Icon name={password ? "lock" : "user"} size={18} />
++        <input
++          value={value}
++          onChange={(e) => setValue(e.target.value)}
++          type={password ? "password" : "text"}
++        />
++      </span>
++    </label>
++  )
+ }
+ 
+-function OptionGroup({ label, children }: { label: string; children: React.ReactNode }) {
+-  return <div className="option-group"><label>{label}</label><div>{children}</div></div>;
++function OptionGroup({
++  label,
++  children,
++}: {
++  label: string
++  children: React.ReactNode
++}) {
++  return (
++    <div className="option-group">
++      <label>{label}</label>
++      <div>{children}</div>
++    </div>
++  )
+ }
+ 
+-function Choice({ active, onClick, icon, title }: { active: boolean; onClick: () => void; icon: string; title: string }) {
+-  return <button className={`choice ${active ? "active" : ""}`} onClick={onClick}><span><Icon name={icon} /></span><b>{title}</b><i>{active && <Icon name="check" size={13} />}</i></button>;
++function Choice({
++  active,
++  onClick,
++  icon,
++  title,
++}: {
++  active: boolean
++  onClick: () => void
++  icon: string
++  title: string
++}) {
++  return (
++    <button className={`choice ${active ? "active" : ""}`} onClick={onClick}>
++      <span>
++        <Icon name={icon} />
++      </span>
++      <b>{title}</b>
++      <i>{active && <Icon name="check" size={13} />}</i>
++    </button>
++  )
+ }
+ 
+-function Pills({ values, ids, active, setActive }: { values: readonly string[] | string[]; ids?: string[]; active: string; setActive: (s: string) => void }) {
+-  return <div className="pills">{values.map((v, i) => <button key={v} className={active === (ids?.[i] || v) ? "active" : ""} onClick={() => setActive(ids?.[i] || v)}>{v}</button>)}</div>;
++function Pills({
++  values,
++  ids,
++  active,
++  setActive,
++}: {
++  values: readonly string[] | string[]
++  ids?: string[]
++  active: string
++  setActive: (s: string) => void
++}) {
++  return (
++    <div className="pills">
++      {values.map((v, i) => (
++        <button
++          key={v}
++          className={active === (ids?.[i] || v) ? "active" : ""}
++          onClick={() => setActive(ids?.[i] || v)}
++        >
++          {v}
++        </button>
++      ))}
++    </div>
++  )
+ }
+ 
+-export default App;
++export default App
+diff --git a/src/main.tsx b/src/main.tsx
+index 964aeb4..d250666 100755
+--- a/src/main.tsx
++++ b/src/main.tsx
+@@ -1,7 +1,7 @@
+-import React from 'react'
+-import ReactDOM from 'react-dom/client'
+-import App from './App'
+-import './index.css'
++import React from "react"
++import ReactDOM from "react-dom/client"
++import App from "./App"
++import "./index.css"
+ 
+-ReactDOM.createRoot(document.getElementById('root')!).render(
++ReactDOM.createRoot(document.getElementById("root")!).render(
+   <React.StrictMode>
+diff --git a/vite.config.ts b/vite.config.ts
+index a7bde37..ba22631 100755
+--- a/vite.config.ts
++++ b/vite.config.ts
+@@ -1,8 +1,7 @@
+-import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
+-import react from '@vitejs/plugin-react'
+-import tailwindcss from '@tailwindcss/vite'
+-import path from 'node:path'
+-
+-import siteConfiguration from './.figma/make/site.json'
++import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite"
++import react from "@vitejs/plugin-react"
++import tailwindcss from "@tailwindcss/vite"
++import path from "node:path"
+ 
++import siteConfiguration from "./.figma/make/site.json"
+ 
+@@ -11,8 +10,10 @@ export default defineConfig(({ mode }) => {
+   // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
+-  const emitSourcemaps = mode === 'development'
++  const emitSourcemaps = mode === "development"
+ 
+   return {
+-    base: process.env.FIGMA_PUBLIC_URL ? `${process.env.FIGMA_PUBLIC_URL}/` : '/',
++    base: process.env.FIGMA_PUBLIC_URL
++      ? `${process.env.FIGMA_PUBLIC_URL}/`
++      : "/",
+     build: {
+-      sourcemap: emitSourcemaps ? 'inline' : false,
++      sourcemap: emitSourcemaps ? "inline" : false,
+       minify: !emitSourcemaps,
+@@ -25,3 +26,3 @@ react(),
+       figmaReactRefreshBoundaryFallback(),
+-      figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
++      figmaMakeKitPlugin({ storiesGlob: "/src/**/*.stories.{ts,tsx,js,jsx}" }),
+     ],
+@@ -29,3 +30,3 @@ react(),
+       alias: {
+-        '@': path.resolve(__dirname, './src'),
++        "@": path.resolve(__dirname, "./src"),
+       },
+@@ -33,9 +34,7 @@ react(),
+     server: {
+-      host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
+-      port: parseInt(process.env.PORT || '8443'),
++      host: process.env.FIGMA_DEV_SERVER_HOST || "0.0.0.0",
++      port: parseInt(process.env.PORT || "8443"),
+       strictPort: true,
+       watch: {
+-        ignored: [
+-          '**/.figma/**',
+-],
++        ignored: ["**/.figma/**"],
+       },
+@@ -43,4 +42,4 @@ react(),
+     preview: {
+-      host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
+-      port: parseInt(process.env.PORT || '8443'),
++      host: process.env.FIGMA_DEV_SERVER_HOST || "0.0.0.0",
++      port: parseInt(process.env.PORT || "8443"),
+     },
+@@ -79,8 +78,15 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+   function sanitizeHtmlValue(value: string | undefined): string {
+-    return value?.replace(/[^a-zA-Z0-9_-]/g, '') || ''
++    return value?.replace(/[^a-zA-Z0-9_-]/g, "") || ""
+   }
+   function escapeHtmlText(value: string): string {
+-    return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+-  }
+-  function replaceHtmlCommentSlot(html: string, slotName: string, content: string): string {
++    return value
++      .replace(/&/g, "&amp;")
++      .replace(/</g, "&lt;")
++      .replace(/>/g, "&gt;")
++  }
++  function replaceHtmlCommentSlot(
++    html: string,
++    slotName: string,
++    content: string,
++  ): string {
+     return html.replace(`<!-- ${slotName} -->`, content)
+@@ -89,20 +95,24 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+   const title = config.title ?? "Figma Make App"
+-  const description = config.description ?? ''
+-  const favicon = config.icons?.icon ?? ''
+-  const socialImage = config.openGraph?.image ?? ''
+-  const language = sanitizeHtmlValue(config.language) || 'en'
+-  const googleAnalyticsId = sanitizeHtmlValue(config.analytics?.googleAnalyticsId)
+-  const headStart = config.customScripts?.headStart ?? ''
+-  const headEnd = config.customScripts?.headEnd ?? ''
+-  const bodyStart = config.customScripts?.bodyStart ?? ''
+-  const bodyEnd = config.customScripts?.bodyEnd ?? ''
+-  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nDisallow: /\n' : ''
++  const description = config.description ?? ""
++  const favicon = config.icons?.icon ?? ""
++  const socialImage = config.openGraph?.image ?? ""
++  const language = sanitizeHtmlValue(config.language) || "en"
++  const googleAnalyticsId = sanitizeHtmlValue(
++    config.analytics?.googleAnalyticsId,
++  )
++  const headStart = config.customScripts?.headStart ?? ""
++  const headEnd = config.customScripts?.headEnd ?? ""
++  const bodyStart = config.customScripts?.bodyStart ?? ""
++  const bodyEnd = config.customScripts?.bodyEnd ?? ""
++  const robotsTxt =
++    config.robots?.index === false ? "User-agent: *\nDisallow: /\n" : ""
+ 
+   return {
+-    name: 'figma-site-configuration',
++    name: "figma-site-configuration",
+     configureServer(server) {
+       server.middlewares.use((req, res, next) => {
+-        if (!robotsTxt || req.url?.split('?')[0] !== '/robots.txt') return next()
++        if (!robotsTxt || req.url?.split("?")[0] !== "/robots.txt")
++          return next()
+ 
+-        res.setHeader('Content-Type', 'text/plain; charset=utf-8')
++        res.setHeader("Content-Type", "text/plain; charset=utf-8")
+         res.end(robotsTxt)
+@@ -114,4 +124,4 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+       this.emitFile({
+-        type: 'asset',
+-        fileName: 'robots.txt',
++        type: "asset",
++        fileName: "robots.txt",
+         source: robotsTxt,
+@@ -120,11 +130,15 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+     transformIndexHtml: {
+-      order: 'pre',
++      order: "pre",
+       handler(html) {
+         let result = html
+-        result = replaceHtmlCommentSlot(result, 'figma:lang', language)
+-        result = replaceHtmlCommentSlot(result, 'figma:title', escapeHtmlText(title))
+-        result = replaceHtmlCommentSlot(result, 'figma:head-start', headStart)
+-        result = replaceHtmlCommentSlot(result, 'figma:head-end', headEnd)
+-        result = replaceHtmlCommentSlot(result, 'figma:body-start', bodyStart)
+-        result = replaceHtmlCommentSlot(result, 'figma:body-end', bodyEnd)
++        result = replaceHtmlCommentSlot(result, "figma:lang", language)
++        result = replaceHtmlCommentSlot(
++          result,
++          "figma:title",
++          escapeHtmlText(title),
++        )
++        result = replaceHtmlCommentSlot(result, "figma:head-start", headStart)
++        result = replaceHtmlCommentSlot(result, "figma:head-end", headEnd)
++        result = replaceHtmlCommentSlot(result, "figma:body-start", bodyStart)
++        result = replaceHtmlCommentSlot(result, "figma:body-end", bodyEnd)
+ 
+@@ -132,15 +146,35 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+         if (description) {
+-          tags.push({ tag: 'meta', attrs: { name: 'description', content: description }, injectTo: 'head' })
++          tags.push({
++            tag: "meta",
++            attrs: { name: "description", content: description },
++            injectTo: "head",
++          })
+         }
+         if (config.robots?.index === false) {
+-          tags.push({ tag: 'meta', attrs: { name: 'robots', content: 'noindex, nofollow' }, injectTo: 'head' })
++          tags.push({
++            tag: "meta",
++            attrs: { name: "robots", content: "noindex, nofollow" },
++            injectTo: "head",
++          })
+         }
+         if (favicon) {
+-          tags.push({ tag: 'link', attrs: { rel: 'icon', href: favicon }, injectTo: 'head' })
++          tags.push({
++            tag: "link",
++            attrs: { rel: "icon", href: favicon },
++            injectTo: "head",
++          })
+         }
+         if (title) {
+-          tags.push({ tag: 'meta', attrs: { property: 'og:title', content: title }, injectTo: 'head' })
++          tags.push({
++            tag: "meta",
++            attrs: { property: "og:title", content: title },
++            injectTo: "head",
++          })
+         }
+         if (description) {
+-          tags.push({ tag: 'meta', attrs: { property: 'og:description', content: description }, injectTo: 'head' })
++          tags.push({
++            tag: "meta",
++            attrs: { property: "og:description", content: description },
++            injectTo: "head",
++          })
+         }
+@@ -148,5 +182,17 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+           tags.push(
+-            { tag: 'meta', attrs: { property: 'og:image', content: socialImage }, injectTo: 'head' },
+-            { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' }, injectTo: 'head' },
+-            { tag: 'meta', attrs: { name: 'twitter:image', content: socialImage }, injectTo: 'head' },
++            {
++              tag: "meta",
++              attrs: { property: "og:image", content: socialImage },
++              injectTo: "head",
++            },
++            {
++              tag: "meta",
++              attrs: { name: "twitter:card", content: "summary_large_image" },
++              injectTo: "head",
++            },
++            {
++              tag: "meta",
++              attrs: { name: "twitter:image", content: socialImage },
++              injectTo: "head",
++            },
+           )
+@@ -157,3 +203,3 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+             {
+-              tag: 'script',
++              tag: "script",
+               attrs: {
+@@ -162,6 +208,6 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+               },
+-              injectTo: 'head',
++              injectTo: "head",
+             },
+             {
+-              tag: 'script',
++              tag: "script",
+               children: `
+@@ -172,3 +218,3 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+ `,
+-              injectTo: 'head',
++              injectTo: "head",
+             },
+@@ -180,3 +226,3 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+             {
+-              tag: 'style',
++              tag: "style",
+               children: `
+@@ -199,9 +245,9 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+ `,
+-              injectTo: 'head',
++              injectTo: "head",
+             },
+             {
+-              tag: 'a',
+-              attrs: { class: 'figma-bypass-link', href: '#root' },
+-              children: 'Skip to content',
+-              injectTo: 'body-prepend',
++              tag: "a",
++              attrs: { class: "figma-bypass-link", href: "#root" },
++              children: "Skip to content",
++              injectTo: "body-prepend",
+             },
+@@ -234,4 +280,4 @@ function figmaErrorOverlayReplay(): Plugin {
+   return {
+-    name: 'figma-error-overlay-replay',
+-    apply: 'serve',
++    name: "figma-error-overlay-replay",
++    apply: "serve",
+     configureServer(server) {
+@@ -239,10 +285,12 @@ function figmaErrorOverlayReplay(): Plugin {
+ 
+-      const origSend = server.ws.send.bind(server.ws) as (...args: any[]) => void
+-      server.ws.send = ((...args: any[]) => {
++      const origSend = server.ws.send.bind(server.ws) as (
++        ...args: any[]
++      ) => void
++      server.ws.send = (((...args: any[]) => {
+         const payload = args[0]
+-        if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
++        if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+           const type = (payload as { type?: string }).type
+-          if (type === 'error') {
+-            lastError = payload as object
+-          } else if (type === 'update' || type === 'full-reload') {
++          if (type === "error") {
++            lastError = (payload as object)
++          } else if (type === "update" || type === "full-reload") {
+             lastError = null
+@@ -251,5 +299,5 @@ function figmaErrorOverlayReplay(): Plugin {
+         return origSend(...args)
+-      }) as typeof server.ws.send
++      }) as typeof server.ws.send)
+ 
+-      server.ws.on('connection', (socket) => {
++      server.ws.on("connection", (socket) => {
+         if (lastError !== null) {
+@@ -279,13 +327,14 @@ function figmaReactRefreshBoundaryFallback(): Plugin {
+   return {
+-    name: 'figma-react-refresh-boundary-fallback',
+-    apply: 'serve',
+-    enforce: 'post',
++    name: "figma-react-refresh-boundary-fallback",
++    apply: "serve",
++    enforce: "post",
+     configureServer(server) {
+-      sendFullReload = () => server.ws.send({ type: 'full-reload', path: '*' })
++      sendFullReload = () => server.ws.send({ type: "full-reload", path: "*" })
+     },
+     transform(code, id) {
+-      if (!/\.[jt]sx?(?:\?|$)/.test(id) || id.includes('/node_modules/')) return null
++      if (!/\.[jt]sx?(?:\?|$)/.test(id) || id.includes("/node_modules/"))
++        return null
+ 
+-      const moduleId = id.split('?')[0] ?? id
+-      const hasRefreshBoundary = code.includes('registerExportsForReactRefresh')
++      const moduleId = id.split("?")[0] ?? id
++      const hasRefreshBoundary = code.includes("registerExportsForReactRefresh")
+       const previousHadRefreshBoundary = hadRefreshBoundary.get(moduleId)
+@@ -313,7 +362,11 @@ function figmaReactRefreshBoundaryFallback(): Plugin {
+  */
+-function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin {
+-  const storiesGlob = Array.isArray(options.storiesGlob) ? options.storiesGlob : [options.storiesGlob]
+-  const ROUTE = '/.figma/make/kit.html'
+-  const VIRTUAL_ID = 'virtual:figma-stories'
+-  const RESOLVED_ID = '\0' + VIRTUAL_ID
++function figmaMakeKitPlugin(options: {
++  storiesGlob: string | string[]
++}): Plugin {
++  const storiesGlob = Array.isArray(options.storiesGlob)
++    ? options.storiesGlob
++    : [options.storiesGlob]
++  const ROUTE = "/.figma/make/kit.html"
++  const VIRTUAL_ID = "virtual:figma-stories"
++  const RESOLVED_ID = "\0" + VIRTUAL_ID
+   const STORIES_MODULE = `export const stories = import.meta.glob(${JSON.stringify(storiesGlob)})`
+@@ -336,4 +389,4 @@ function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin
+   return {
+-    name: 'figma-make-kit',
+-    apply: 'serve',
++    name: "figma-make-kit",
++    apply: "serve",
+     resolveId(id) {
+@@ -348,7 +401,7 @@ function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin
+       server.middlewares.use(async (req, res, next) => {
+-        const url = req.url || ''
+-        if (url.split('?')[0] !== ROUTE) return next()
++        const url = req.url || ""
++        if (url.split("?")[0] !== ROUTE) return next()
+ 
+         try {
+-          res.setHeader('Content-Type', 'text/html')
++          res.setHeader("Content-Type", "text/html")
+           res.end(await server.transformIndexHtml(url, HTML_BOOTSTRAP))
