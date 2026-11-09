@@ -368,3 +368,42 @@ export function coordToIndex(row: number, col: number): number {
 export function coordToLabel(row: number, col: number): string {
   return `${String.fromCharCode(65 + col)}${BOARD_SIZE - row}`;
 }
+
+// 👇 檢查特定玩家（AI）有冇「活三」或「活四」嘅威脅 (兩邊冇被封死)
+export function checkThreat(board: Board, targetPlayer: Player): boolean {
+  const opponent: Player = targetPlayer === 1 ? 2 : 1;
+
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] !== targetPlayer) continue;
+
+      for (const [dx, dy] of DIRECTIONS) {
+        // 確保呢粒棋係呢條線嘅起點，避免重複檢查
+        const prevR = r - dx, prevC = c - dy;
+        if (prevR >= 0 && prevR < BOARD_SIZE && prevC >= 0 && prevC < BOARD_SIZE && board[prevR][prevC] === targetPlayer) {
+          continue;
+        }
+
+        // 計算呢條線有幾多粒連續同色棋
+        const len = getLineLength(board, r, c, targetPlayer, dx, dy);
+        
+        if (len === 3 || len === 4) {
+          // 搵出呢條線嘅頭同尾（再延伸一格）
+          const endR = r + dx * (len - 1), endC = c + dy * (len - 1);
+          const frontR = r - dx, frontC = c - dy;
+          const backR = endR + dx, backC = endC + dy;
+
+          // 檢查兩邊係咪空位（唔係對手嘅棋，亦唔係出界）
+          const isFrontOpen = frontR >= 0 && frontR < BOARD_SIZE && frontC >= 0 && frontC < BOARD_SIZE && board[frontR][frontC] === 0;
+          const isBackOpen = backR >= 0 && backR < BOARD_SIZE && backC >= 0 && backC < BOARD_SIZE && board[backR][backC] === 0;
+
+          // 如果兩邊都係空位（活三 / 活四），就回傳 true
+          if (isFrontOpen && isBackOpen) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}

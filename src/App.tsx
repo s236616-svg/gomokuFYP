@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
+import { speak } from "./utils/speech"
+import { checkThreat } from "./game/logic"
 
 import {
   createBoard,
@@ -18,7 +20,7 @@ import {
 type Lang = "zh" | "en"
 type Theme = "light" | "dark"
 type Page = "login" | "home" | "lessons" | "lesson" | "challenge" | "game" | "leaderboard" | "profile" | "settings"
-type Modal = "signup" | "forgot" | "logout" | "setup" | "hint" | "undo" | "restart" | "leave" | "correct" | "incorrect" | "challengeFail" | "complete" | "record" | "gameOverWin" | "gameOverLose" | "gameOverDraw" | "forbidden" | null
+type Modal = "signup" | "forgot" | "logout" | "setup" | "hint" | "undo" | "restart" | "leave" | "correct" | "incorrect" | "challengeFail" | "complete" | "record" | "gameOverWin" | "gameOverLose" | "gameOverDraw" | "forbidden" | "lessonWin" | "lessonLose" | null
 
 const copy = {
   zh: {
@@ -47,8 +49,7 @@ const copy = {
     or: "或",
     heroEyebrow: "邊學 · 邊玩 · 邊進步",
     heroTitle: "落好每一步，\n學棋冇煩惱。",
-    heroBody:
-      "跟住熊貓阿棋廣東話講解，由基本規則到實戰陷阱，跟住自己嘅步伐掌握攻防策略。",
+    heroBody: "跟住熊貓阿棋廣東話講解，由基本規則到實戰陷阱，跟住自己嘅步伐掌握攻防策略。",
     startLearning: "開始學習",
     quickGame: "快速對弈",
     continue: "繼續",
@@ -78,8 +79,7 @@ const copy = {
     notStarted: "未開始",
     lesson: "第 4 課",
     openThree: "活三",
-    openThreeText:
-      "活三係一行連續三粒棋，兩邊都仲可以落子。對手通常要即刻防守。",
+    openThreeText: "活三係一行連續三粒棋，兩邊都仲可以落子。對手通常要即刻防守。",
     instruction: "請喺發光位置落下黑棋，完成一個活三。",
     step: "步驟 2 / 3",
     previous: "上一課",
@@ -123,8 +123,7 @@ const copy = {
     startRenju: "開始連珠對局",
     cancel: "取消",
     rules: "連珠規則須知",
-    rulesText:
-      "黑棋唔可以下三三、四四及長連；白棋冇禁手。按本項目規則，五連優先於禁手判定。",
+    rulesText: "黑棋唔可以下三三、四四及長連；白棋冇禁手。按本項目規則，五連優先於禁手判定。",
     localNote: "本地雙人對局不設計時及 AI 功能。",
     rankingTitle: "棋手排行榜",
     rankingSub: "與全港棋友切磋，睇吓今個星期邊個棋力最強。",
@@ -196,8 +195,7 @@ const copy = {
     incorrectTitle: "差一點，再想想！",
     incorrectBody: "呢個位置未能連成活三。要留意棋子嘅頭尾都要保持開放。",
     challengeFailTitle: "已為你拆解棋局",
-    challengeFailBody:
-      "白棋嘅威脅喺 E8，黑棋必須立即封住呢個位置。你可以去一般遊玩熟習攻防策略先，再嚟挑戰。",
+    challengeFailBody: "白棋嘅威脅喺 E8，黑棋必須立即封住呢個位置。你可以去一般遊玩熟習攻防策略先，再嚟挑戰。",
     tryAgain: "再試一次",
     showAnswer: "睇答案",
     finishTitle: "教學完成！",
@@ -214,6 +212,29 @@ const copy = {
     gameOverDrawBody: "勢均力敵，要唔要再嚟一局？",
     playAgain: "再玩一局",
     backToMain: "返回主頁",
+    blackWins: "黑棋勝利！",
+    whiteWins: "白棋勝利！",
+    warningOpenThree: "欸，對面好像有個活三哦，再不擋就輸了哦！",
+    warningFour: "危險！對面有四連了，快點擋住！",
+    aiSuggest: "阿棋建議落喺",
+    winVoice: "恭喜你，你贏咗啦！",
+    loseVoice: "你輸咗喇，再接再厲！",
+    localWinVoice: "遊戲結束，有玩家勝出！",
+    welcomeVoice: "歡迎嚟到棋趣，一齊學五子棋啦！",
+    winVoiceAI: "恭喜你，你贏咗阿棋啦！",
+    loseVoiceAI: "阿棋贏咗呢局，再接再厲！",
+    winVoiceLocalBlack: "遊戲結束，黑棋勝利！",
+    winVoiceLocalWhite: "遊戲結束，白棋勝利！",
+    voiceOn: "廣東話語音教學，語音講解已開啟。",
+    gameOverLocalBlack: "對局結束：黑棋勝利！",
+    gameOverLocalWhite: "對局結束：白棋勝利！",
+    lessonPrompt: "白棋好像有動靜，試吓落一步擋住佢？",
+    lessonCorrectTitle: "好嘢！你擋住咗啦！",
+    lessonCorrectBody: "活三就係咁危險，唔擋嘅話對面下一步就贏啦！",
+    lessonCorrectVoice: "好嘢，你成功擋住咗對手嘅活三啦！",
+    lessonFailTitle: "哎呀，輸咗喇！",
+    lessonFailBody: "你睇，如果唔擋住對手嘅活三，佢下一步就會連成四粒，再下一步就贏喇！",
+    lessonFailVoice: "哎呀，你睇，如果唔擋住對手嘅活三，佢下一步就會贏啦！",
   },
   en: {
     brand: "Gomoku Joy",
@@ -227,8 +248,7 @@ const copy = {
     settings: "Settings",
     logout: "Log Out",
     welcome: "Welcome to Gomoku Joy",
-    loginIntro:
-      "Learn Gomoku naturally with Cantonese guidance, from your first move to confident play.",
+    loginIntro: "Learn Gomoku naturally with Cantonese guidance, from your first move to confident play.",
     guest: "Continue as Guest",
     emailLogin: "Sign in with Email",
     google: "Sign in with Google",
@@ -242,8 +262,7 @@ const copy = {
     or: "or",
     heroEyebrow: "LEARN · PLAY · IMPROVE",
     heroTitle: "Make every move\ncount.",
-    heroBody:
-      "Learn with Ah Kei the panda’s Cantonese guidance, from basic rules to tactical traps, at your own pace.",
+    heroBody: "Learn with Ah Kei the panda’s Cantonese guidance, from basic rules to tactical traps, at your own pace.",
     startLearning: "Start Learning",
     quickGame: "Quick Game",
     continue: "Continue",
@@ -258,15 +277,13 @@ const copy = {
     progress: "Learning progress",
     lessonsDone: "3 of 8 lessons completed",
     streak: "4-day learning streak",
-    createPrompt:
-      "Create a free account to keep your learning progress and game records.",
+    createPrompt: "Create a free account to keep your learning progress and game records.",
     createAccount: "Create Account",
     greeting: "Good morning, player!",
     guestUser: "Guest Player",
     guestTag: "Guest",
     lessonPath: "Your learning path",
-    lessonPathSub:
-      "Each lesson takes 3–5 minutes. There is no timer, so learn at your own pace.",
+    lessonPathSub: "Each lesson takes 3–5 minutes. There is no timer, so learn at your own pace.",
     cantoneseNarration: "Cantonese narration",
     narrationOn: "Voice guidance is on",
     backHome: "Back to Home",
@@ -275,10 +292,8 @@ const copy = {
     notStarted: "Not started",
     lesson: "Lesson 4",
     openThree: "Open Three",
-    openThreeText:
-      "An open three is a row of three stones with both ends free. Your opponent will usually need to defend at once.",
-    instruction:
-      "Place a black stone on the glowing point to complete an open three.",
+    openThreeText: "An open three is a row of three stones with both ends free. Your opponent will usually need to defend at once.",
+    instruction: "Place a black stone on the glowing point to complete an open three.",
     step: "Step 2 of 3",
     previous: "Previous Lesson",
     next: "Next",
@@ -288,8 +303,7 @@ const copy = {
     undo: "Undo",
     exit: "Exit Lesson",
     challenge: "Board Challenge",
-    challengeObjective:
-      "Find the move that prevents your opponent from winning",
+    challengeObjective: "Find the move that prevents your opponent from winning",
     challengeHint: "Cantonese Hint",
     moves: "moves",
     turn: "Your turn",
@@ -322,12 +336,10 @@ const copy = {
     startRenju: "Start Renju Game",
     cancel: "Cancel",
     rules: "Renju rules",
-    rulesText:
-      "Black cannot play double-three, double-four or overline. White has no forbidden moves. Under the project rules, five-in-a-row takes priority.",
+    rulesText: "Black cannot play double-three, double-four or overline. White has no forbidden moves. Under the project rules, five-in-a-row takes priority.",
     localNote: "Local 2-player games have no timer or AI features.",
     rankingTitle: "Player Leaderboard",
-    rankingSub:
-      "Play with the Hong Kong community and see who is strongest this week.",
+    rankingSub: "Play with the Hong Kong community and see who is strongest this week.",
     overall: "Overall",
     weekly: "Weekly",
     friends: "Friends",
@@ -363,8 +375,7 @@ const copy = {
     neon: "Neon",
     sound: "Sound effects",
     tts: "Cantonese teaching narration",
-    ttsNote:
-      "Cantonese narration remains available in either interface language.",
+    ttsNote: "Cantonese narration remains available in either interface language.",
     save: "Save Settings",
     saved: "Settings saved",
     name: "Name",
@@ -382,12 +393,10 @@ const copy = {
     logoutTitle: "Log out now?",
     logoutBody: "You can always come back and continue later.",
     hintTitle: "Ah Kei’s Hint",
-    hintBody:
-      "Play at H8 to form an open three and force your opponent to defend.",
+    hintBody: "Play at H8 to form an open three and force your opponent to defend.",
     gotIt: "Got It",
     undoTitle: "Undo the last move?",
-    undoBody:
-      "In an AI game, your last move and the AI’s last move will both be undone.",
+    undoBody: "In an AI game, your last move and the AI’s last move will both be undone.",
     restartTitle: "Restart this game?",
     restartBody: "Your current game progress will be lost.",
     leaveTitle: "Leave this game?",
@@ -395,19 +404,15 @@ const copy = {
     keepPlaying: "Continue Playing",
     leaveGame: "Leave Game",
     correctTitle: "Great move!",
-    correctBody:
-      "You completed an open three. Your opponent now has to defend.",
+    correctBody: "You completed an open three. Your opponent now has to defend.",
     incorrectTitle: "Nearly there—try again!",
-    incorrectBody:
-      "That point does not create an open three. Remember to keep both ends open.",
+    incorrectBody: "That point does not create an open three. Remember to keep both ends open.",
     challengeFailTitle: "Let’s break down the position",
-    challengeFailBody:
-      "White’s threat is at E8, so Black must block it immediately. Practise attack and defence in Free Play, then return for another try.",
+    challengeFailBody: "White’s threat is at E8, so Black must block it immediately. Practise attack and defence in Free Play, then return for another try.",
     tryAgain: "Try Again",
     showAnswer: "Show Answer",
     finishTitle: "Tutorial Complete!",
-    finishBody:
-      "You passed both board challenges and mastered the foundations of Gomoku attack and defence.",
+    finishBody: "You passed both board challenges and mastered the foundations of Gomoku attack and defence.",
     freePlay: "Start Free Play",
     recordTitle: "Game Summary",
     duration: "Duration 08:42",
@@ -420,120 +425,56 @@ const copy = {
     gameOverDrawBody: "A close match. Want to play again?",
     playAgain: "Play Again",
     backToMain: "Back to Main",
+    blackWins: "Black Wins!",
+    whiteWins: "White Wins!",
+    warningOpenThree: "Hey, the opponent might have an open three! Block it before you lose!",
+    warningFour: "Danger! The opponent has a four! Block it now!",
+    aiSuggest: "Ah Kei suggests playing at",
+    winVoice: "Congratulations, you win!",
+    loseVoice: "You lose, try again!",
+    localWinVoice: "Game over, someone wins!",
+    welcomeVoice: "Welcome to Gomoku Joy, let's learn Gomoku together!",
+    winVoiceAI: "Congratulations, you defeated Ah Kei!",
+    loseVoiceAI: "Ah Kei wins this round, try again!",
+    winVoiceLocalBlack: "Game over, Black wins!",
+    winVoiceLocalWhite: "Game over, White wins!",
+    voiceOn: "Cantonese narration, voice guidance is on.",
+    gameOverLocalBlack: "Game Over: Black Wins!",
+    gameOverLocalWhite: "Game Over: White Wins!",
+    lessonPrompt: "White seems to be up to something. Try making a move to block?",
+    lessonCorrectTitle: "Great! You blocked it!",
+    lessonCorrectBody: "An open three is dangerous. If you don't block, they will win next!",
+    lessonCorrectVoice: "Great, you successfully blocked the opponent's open three!",
+    lessonFailTitle: "Oh no, you lost!",
+    lessonFailBody: "See? If you don't block an open three, they will make a four and then win!",
+    lessonFailVoice: "Oh no, see? If you don't block the open three, they will win!",
   },
 } as const
 
 const iconPaths: Record<string, React.ReactNode> = {
-  home: (
-    <>
-      <path d="M3 10.8 12 3l9 7.8" />
-      <path d="M5.5 9.5V21h13V9.5M9 21v-7h6v7" />
-    </>
-  ),
-  book: (
-    <>
-      <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v17H7.5A3.5 3.5 0 0 0 4 22.5z" />
-      <path d="M4 5.5v17M8 6h8M8 10h7" />
-    </>
-  ),
-  play: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="m10 8 6 4-6 4z" />
-    </>
-  ),
-  trophy: (
-    <>
-      <path d="M8 4h8v5a4 4 0 0 1-8 0zM10 13v4M14 13v4M7 21h10M9 17h6" />
-      <path d="M8 6H4v2a4 4 0 0 0 4 4M16 6h4v2a4 4 0 0 1-4 4" />
-    </>
-  ),
-  user: (
-    <>
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 21a8 8 0 0 1 16 0" />
-    </>
-  ),
-  settings: (
-    <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
-    </>
-  ),
+  home: (<><path d="M3 10.8 12 3l9 7.8" /><path d="M5.5 9.5V21h13V9.5M9 21v-7h6v7" /></>),
+  book: (<><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v17H7.5A3.5 3.5 0 0 0 4 22.5z" /><path d="M4 5.5v17M8 6h8M8 10h7" /></>),
+  play: (<><circle cx="12" cy="12" r="9" /><path d="m10 8 6 4-6 4z" /></>),
+  trophy: (<><path d="M8 4h8v5a4 4 0 0 1-8 0zM10 13v4M14 13v4M7 21h10M9 17h6" /><path d="M8 6H4v2a4 4 0 0 0 4 4M16 6h4v2a4 4 0 0 1-4 4" /></>),
+  user: (<><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>),
+  settings: (<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" /></>),
   moon: <path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z" />,
-  sun: (
-    <>
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-    </>
-  ),
-  globe: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
-    </>
-  ),
-  arrow: (
-    <>
-      <path d="m9 18 6-6-6-6" />
-    </>
-  ),
-  back: (
-    <>
-      <path d="m15 18-6-6 6-6" />
-    </>
-  ),
-  sound: (
-    <>
-      <path d="M5 10v4h3l4 4V6L8 10zM16 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12" />
-    </>
-  ),
-  bulb: (
-    <>
-      <path d="M9 18h6M10 22h4M8.5 14.5A6 6 0 1 1 15.5 14.5L14 17h-4z" />
-    </>
-  ),
-  undo: (
-    <>
-      <path d="m9 7-5 5 5 5" />
-      <path d="M4 12h9a6 6 0 0 1 6 6" />
-    </>
-  ),
-  refresh: (
-    <>
-      <path d="M20 7v5h-5M4 17v-5h5" />
-      <path d="M6.1 8a7 7 0 0 1 11.5-2.6L20 8M4 16l2.4 2.6A7 7 0 0 0 17.9 16" />
-    </>
-  ),
-  flag: (
-    <>
-      <path d="M5 22V3M5 4h12l-2 4 2 4H5" />
-    </>
-  ),
+  sun: (<><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>),
+  globe: (<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>),
+  arrow: <path d="m9 18 6-6-6-6" />,
+  back: <path d="m15 18-6-6 6-6" />,
+  sound: <path d="M5 10v4h3l4 4V6L8 10zM16 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12" />,
+  bulb: <path d="M9 18h6M10 22h4M8.5 14.5A6 6 0 1 1 15.5 14.5L14 17h-4z" />,
+  undo: (<><path d="m9 7-5 5 5 5" /><path d="M4 12h9a6 6 0 0 1 6 6" /></>),
+  refresh: (<><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6.1 8a7 7 0 0 1 11.5-2.6L20 8M4 16l2.4 2.6A7 7 0 0 0 17.9 16" /></>),
+  flag: <path d="M5 22V3M5 4h12l-2 4 2 4H5" />,
   check: <path d="m5 12 4 4L19 6" />,
-  lock: (
-    <>
-      <rect x="5" y="10" width="14" height="11" rx="2" />
-      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-    </>
-  ),
-  eye: (
-    <>
-      <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z" />
-      <circle cx="12" cy="12" r="2.5" />
-    </>
-  ),
-  close: (
-    <>
-      <path d="m6 6 12 12M18 6 6 18" />
-    </>
-  ),
+  lock: (<><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>),
+  eye: (<><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></>),
+  close: <path d="m6 6 12 12M18 6 6 18" />,
   menu: <path d="M5 7h14M5 12h14M5 17h14" />,
-  logout: (
-    <>
-      <path d="M10 5H5v14h5M14 8l4 4-4 4M9 12h9" />
-    </>
-  ),
+  logout: (<><path d="M10 5H5v14h5M14 8l4 4-4 4M9 12h9" /></>),
+  mute: <path d="M5 10v4h3l4 4V6L8 10zM16 9l4 4M20 9l-4 4" />,
 }
 
 type IconProps = { name: string; size?: number }
@@ -590,8 +531,10 @@ function App() {
   const [firstMove, setFirstMove] = useState("random")
   const [timer, setTimer] = useState("unlimited")
   const [boardStyle, setBoardStyle] = useState("wood")
-    const [hintsEnabled, setHintsEnabled] = useState(true)
+  const [hintsEnabled, setHintsEnabled] = useState(true)
+  const [soundEnabled, setSoundEnabled] = useState(true)
   const [gameOverResult, setGameOverResult] = useState<"win" | "lose" | "draw" | null>(null)
+  const [gameWinner, setGameWinner] = useState<Player | null>(null)
   const [gameKey, setGameKey] = useState(0)
   const t = copy[lang]
 
@@ -620,7 +563,7 @@ function App() {
 
   const startGame = () => {
     setGameOverResult(null)
-    setGameKey((k) => k + 1) // 👈 強制 Game component 重新載入
+    setGameKey((k) => k + 1)
     navigate("game")
   }
 
@@ -634,18 +577,12 @@ function App() {
   return (
     <div className="app-shell">
       {page === "login" ? (
-        <LoginPage
-          lang={lang} theme={theme} setLang={setLang} setTheme={setTheme}
-          email={loginEmail} password={loginPassword}
-          setEmail={setLoginEmail} setPassword={setLoginPassword}
-          showPassword={showPassword} setShowPassword={setShowPassword}
-          error={error} signIn={signIn} guest={() => navigate("home")} openModal={setModal}
-        />
+        <LoginPage lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} email={loginEmail} password={loginPassword} setEmail={setLoginEmail} setPassword={setLoginPassword} showPassword={showPassword} setShowPassword={setShowPassword} error={error} signIn={signIn} guest={() => navigate("home")} openModal={setModal} />
       ) : (
         <>
           <Header page={page} lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} navigate={navigate} openModal={setModal} openSetup={openSetup} />
           <main>
-            {page === "home" && <Home lang={lang} navigate={navigate} openSetup={openSetup} openModal={setModal} />}
+            {page === "home" && <Home lang={lang} navigate={navigate} openSetup={openSetup} openModal={setModal} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled} />}
             {page === "lessons" && <Lessons lang={lang} navigate={navigate} />}
             {page === "lesson" && <Lesson lang={lang} navigate={navigate} moves={lessonMoves} setMoves={setLessonMoves} audioPlaying={audioPlaying} setAudioPlaying={setAudioPlaying} openModal={setModal} />}
             {page === "challenge" && <Challenge lang={lang} navigate={navigate} openModal={setModal} />}
@@ -660,15 +597,17 @@ function App() {
                 boardStyle={boardStyle} 
                 openModal={setModal}
                 hintsEnabled={hintsEnabled}
-                onGameOver={(result) => {
+                soundEnabled={soundEnabled}
+                onGameOver={(result, winner) => { // 👈 接收 winner
                   setGameOverResult(result)
+                  setGameWinner(winner) // 👈 儲存贏家
                   setModal(result === "win" ? "gameOverWin" : result === "lose" ? "gameOverLose" : "gameOverDraw")
                 }}
               />
             )}
             {page === "leaderboard" && <Leaderboard lang={lang} navigate={navigate} />}
             {page === "profile" && <Profile lang={lang} openModal={setModal} navigate={navigate} />}
-            {page === "settings" && <Settings lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} boardStyle={boardStyle} setBoardStyle={setBoardStyle} navigate={navigate} saved={() => setToast(t.saved)} />}
+            {page === "settings" && <Settings lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} boardStyle={boardStyle} setBoardStyle={setBoardStyle} navigate={navigate} saved={() => setToast(t.saved)} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}/>}
           </main>
           <MobileNav page={page} lang={lang} navigate={navigate} openSetup={openSetup} />
         </>
@@ -682,8 +621,9 @@ function App() {
           setFirstMove={setFirstMove} timer={timer} setTimer={setTimer}
           startGame={startGame} logout={() => navigate("login")}
           undo={() => { setGameMoves((m) => m.slice(0, -2)); setModal(null) }}
-          hintsEnabled={hintsEnabled}
-          setHintsEnabled={setHintsEnabled}
+          hintsEnabled={hintsEnabled} setHintsEnabled={setHintsEnabled}
+          soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}
+          gameWinner={gameWinner}
         />
       )}
       {toast && <div className="toast" role="status"><span className="toast-check"><Icon name="check" size={16} /></span>{toast}</div>}
@@ -818,7 +758,7 @@ function LoginPage(props: {
   )
 }
 
-function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate: (p: Page) => void; openSetup: (r: boolean) => void; openModal: (m: Modal) => void }) {
+function Home({ lang, navigate, openSetup, openModal, soundEnabled, setSoundEnabled }: { lang: Lang; navigate: (p: Page) => void; openSetup: (r: boolean) => void; openModal: (m: Modal) => void; soundEnabled: boolean; setSoundEnabled: (v: boolean) => void }) {
   const t = copy[lang]
   const cards = [
     { type: "learn", n: "01", title: t.teachingTitle, desc: t.teachingDesc, action: t.continue, onClick: () => navigate("lessons"), icon: "book" },
@@ -847,9 +787,20 @@ function Home({ lang, navigate, openSetup, openModal }: { lang: Lang; navigate: 
             {Array.from({ length: 49 }, (_, i) => (<i key={i} className={[10, 17, 24].includes(i) ? "black" : [11, 18].includes(i) ? "white" : ""} />))}
           </div>
           <div className="mascot-home"><Panda /></div>
-          <div className={`tip-bubble tip-bubble-${lang}`}>
-            <Icon name="sound" size={26} />
-            <span className="tip-copy"><strong>{t.cantoneseNarration}</strong><b>{t.narrationOn}</b></span>
+          <div 
+            className={`tip-bubble tip-bubble-${lang}`} 
+            onClick={() => {
+              const next = !soundEnabled
+              setSoundEnabled(next)
+              if (next) speak(t.voiceOn)
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <Icon name={soundEnabled ? "sound" : "mute"} size={26} />
+            <span className="tip-copy">
+              <strong>{t.cantoneseNarration}</strong>
+              <b>{soundEnabled ? t.narrationOn : (lang === "zh" ? "語音已關閉" : "Voice is off")}</b>
+            </span>
           </div>
         </div>
       </section>
@@ -920,6 +871,150 @@ function Lessons({ lang, navigate }: { lang: Lang; navigate: (p: Page) => void }
   )
 }
 
+function Lesson(props: {
+  lang: Lang
+  navigate: (p: Page) => void
+  moves: number[]
+  setMoves: React.Dispatch<React.SetStateAction<number[]>>
+  audioPlaying: boolean
+  setAudioPlaying: (v: boolean) => void
+  openModal: (m: Modal) => void
+}) {
+  const t = copy[props.lang]
+  
+  // 初始局面：白棋活三
+  const [board, setBoard] = useState<Board>(() => {
+    const b = createBoard()
+    b[6][7] = 1; b[8][7] = 1; b[9][7] = 1; b[8][8] = 1; // 黑
+    b[7][6] = 2; b[7][7] = 2; b[7][8] = 2; // 白活三
+    return b
+  })
+  
+  const [currentPlayer, setCurrentPlayer] = useState<Player>(1)
+  const [status, setStatus] = useState<"playing" | "won" | "lose">("playing")
+  const [isAiThinking, setIsAiThinking] = useState(false)
+  const [turnCount, setTurnCount] = useState(0) // 紀錄回合數，用嚟控制 AI 行為
+
+  const checkBlockSuccess = (r: number, c: number) => {
+    // 玩家第一步必須落喺 (7,5) 或 (7,9)
+    return (r === 7 && c === 5) || (r === 7 && c === 9)
+  }
+
+  const place = (index: number) => {
+    if (status !== "playing" || currentPlayer !== 1) return
+    const [r, c] = indexToCoord(index)
+    if (board[r][c] !== 0) return
+
+    const newBoard = cloneBoard(board)
+    newBoard[r][c] = 1 // 玩家落子
+    setBoard(newBoard)
+
+    // 如果係第一步，而且成功防守
+    if (turnCount === 0 && checkBlockSuccess(r, c)) {
+      setStatus("won")
+      if (props.lang === "zh") speak(t.lessonCorrectVoice)
+      props.openModal("lessonWin")
+      return
+    }
+
+    // 輪到白棋
+    setCurrentPlayer(2)
+  }
+
+  // AI 自動落子邏輯
+  useEffect(() => {
+    if (currentPlayer !== 2 || status !== "playing") return
+    setIsAiThinking(true)
+    
+    const timer = setTimeout(() => {
+      const b = cloneBoard(board)
+      let move: [number, number] | null = null
+      
+      if (turnCount === 0) {
+        // 第一步：玩家落錯，白棋形成活四
+        if (b[7][5] === 0) move = [7, 5]
+        else if (b[7][9] === 0) move = [7, 9]
+      } else if (turnCount === 1) {
+        // 第二步：玩家擋咗一邊，白棋喺另一邊連成五連
+        if (b[7][5] === 0) move = [7, 5]
+        else if (b[7][9] === 0) move = [7, 9]
+        else if (b[7][4] === 0) move = [7, 4] // 如果兩邊都被封，再搵位
+        else if (b[7][10] === 0) move = [7, 10]
+      }
+
+      if (move) {
+        b[move[0]][move[1]] = 2
+        setBoard(b)
+        
+        // 白棋行完，檢查有冇贏
+        if (checkWin(b, move[0], move[1], 2)) {
+          setStatus("lose")
+          if (props.lang === "zh") speak(t.lessonFailVoice)
+          props.openModal("lessonLose")
+        } else {
+          setCurrentPlayer(1) // 輪返玩家
+          setTurnCount(c => c + 1) // 回合數 + 1
+        }
+      }
+      setIsAiThinking(false)
+    }, 800) 
+    
+    return () => clearTimeout(timer)
+  }, [currentPlayer, status, board, turnCount, props.lang, t])
+
+  // 進入教學畫面時自動播語音
+  useEffect(() => {
+    if (props.lang === "zh") {
+      speak("白棋好像有動靜，試吓落一步擋住佢？");
+    } else {
+      speak("White seems to be up to something. Try making a move to block?");
+    }
+  }, [props.lang])
+
+  return (
+    <div>
+      <div className="lesson-topbar">
+        <button className="back-link" onClick={() => props.navigate("lessons")}><Icon name="back" />{t.backLessons}</button>
+        <div className="step-bar"><span><i /></span><b>{t.step}</b></div>
+        <button className="text-link danger" onClick={() => props.openModal("leave")}>{t.exit}</button>
+      </div>
+      <div className="game-layout">
+        <section className="board-area">
+          <div className="board-heading">
+            <div><span className="eyebrow accent">{t.lesson}</span><h1>{t.openThree}</h1></div>
+            <span className="no-timer"><Icon name="book" size={18} />{t.teachingTitle}</span>
+          </div>
+          <div className="board-shell">
+            <GomokuBoard board={board} onMove={place} />
+          </div>
+        </section>
+        <aside className="lesson-panel">
+          <div className="lesson-panel-top">
+            <span className="mode-icon learn-icon"><Icon name="book" /></span>
+            <div><small>{t.lesson}</small><h2>{t.openThree}</h2></div>
+          </div>
+          <div className="narration-box">
+            <div className="narration-head"><span><Icon name="sound" size={17} />{t.cantoneseNarration}</span></div>
+            <div className="waveform">{Array.from({ length: 27 }, (_, i) => (<i key={i} style={{ height: `${8 + ((i * 11) % 23)}px` }} />))}</div>
+          </div>
+          <p className="lesson-explain">{t.openThreeText}</p>
+          
+          <div className="instruction-box">
+            <span>{t.step}</span>
+            <b>{t.lessonPrompt}</b>
+          </div>
+          
+          {isAiThinking && (
+            <div style={{ marginTop: '15px', color: 'var(--muted)', fontSize: '12px', textAlign: 'center' }}>
+              {props.lang === "zh" ? "白棋思考緊..." : "White is thinking..."}
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
+  )
+}
+
 function PageIntro({ eyebrow, title, body, back, onBack, children }: { eyebrow: string; title: string; body: string; back: string; onBack: () => void; children?: React.ReactNode }) {
   return (
     <section className="page-intro">
@@ -958,57 +1053,6 @@ function GomokuBoard({ board, onMove, highlight, lastMove, hintMove, currentPlay
           </button>
         )
       })}
-    </div>
-  )
-}
-
-function Lesson(props: { lang: Lang; navigate: (p: Page) => void; moves: number[]; setMoves: React.Dispatch<React.SetStateAction<number[]>>; audioPlaying: boolean; setAudioPlaying: (v: boolean) => void; openModal: (m: Modal) => void; }) {
-  const t = copy[props.lang]
-  const board = useMemo(() => {
-    const b = createBoard()
-    props.moves.forEach((idx, i) => { const [r, c] = indexToCoord(idx); b[r][c] = (i % 2 === 0 ? 1 : 2) as Player })
-    return b
-  }, [props.moves])
-  const place = (i: number) => { props.setMoves((m) => [...m, i]); props.openModal(i === 113 ? "correct" : "incorrect") }
-  return (
-    <div>
-      <div className="lesson-topbar">
-        <button className="back-link" onClick={() => props.navigate("lessons")}><Icon name="back" />{t.backLessons}</button>
-        <div className="step-bar"><span><i /></span><b>{t.step}</b></div>
-        <button className="text-link danger" onClick={() => props.openModal("leave")}>{t.exit}</button>
-      </div>
-      <div className="game-layout">
-        <section className="board-area">
-          <div className="board-heading">
-            <div><span className="eyebrow accent">{t.lesson}</span><h1>{t.openThree}</h1></div>
-            <span className="no-timer"><Icon name="book" size={18} />{t.teachingTitle}</span>
-          </div>
-          <div className="board-shell"><GomokuBoard board={board} onMove={place} highlight={113} lastMove={props.moves[props.moves.length - 1]} /></div>
-          <div className="mobile-only-actions">
-            <button className="button button-secondary" onClick={() => props.setMoves((m) => m.slice(0, -1))}><Icon name="undo" />{t.undo}</button>
-            <button className="button button-secondary" onClick={() => props.openModal("hint")}><Icon name="bulb" />{t.hint}</button>
-          </div>
-        </section>
-        <aside className="lesson-panel">
-          <div className="lesson-panel-top"><span className="mode-icon learn-icon"><Icon name="book" /></span><div><small>{t.lesson}</small><h2>{t.openThree}</h2></div></div>
-          <div className="narration-box">
-            <div className="narration-head"><span><Icon name="sound" size={17} />{t.cantoneseNarration}</span><small>00:18 / 00:32</small></div>
-            <div className="waveform">{Array.from({ length: 27 }, (_, i) => (<i key={i} style={{ height: `${8 + ((i * 11) % 23)}px` }} />))}</div>
-            <button className="round-play" onClick={() => props.setAudioPlaying(!props.audioPlaying)}>{props.audioPlaying ? "Ⅱ" : "▶"}</button>
-          </div>
-          <p className="lesson-explain">{t.openThreeText}</p>
-          <div className="instruction-box"><span>{t.step}</span><b>{t.instruction}</b></div>
-          <div className="panel-actions">
-            <button className="button button-secondary" onClick={() => props.setMoves((m) => m.slice(0, -1))}><Icon name="undo" />{t.undo}</button>
-            <button className="button button-secondary" onClick={() => props.openModal("hint")}><Icon name="bulb" />{t.hint}</button>
-          </div>
-          <button className="button button-ghost button-full" onClick={() => props.setAudioPlaying(!props.audioPlaying)}><Icon name="sound" />{t.replay}</button>
-          <div className="lesson-bottom-nav">
-            <button className="button button-ghost"><Icon name="back" />{t.previous}</button>
-            <button className="button button-primary" onClick={() => props.navigate("challenge")}>{t.next}<Icon name="arrow" /></button>
-          </div>
-        </aside>
-      </div>
     </div>
   )
 }
@@ -1056,8 +1100,9 @@ function Game(props: {
   setupType: string
   boardStyle: string
   openModal: (m: Modal) => void
-  onGameOver: (result: "win" | "lose" | "draw") => void
+  onGameOver: (result: "win" | "lose" | "draw", winner: Player | null) => void
   hintsEnabled: boolean
+  soundEnabled: boolean
 }) {
   const t = copy[props.lang]
   const isLocal = props.setupType === "local"
@@ -1075,44 +1120,31 @@ function Game(props: {
   const [timeLeft, setTimeLeft] = useState<number>(0)
   const [hintMove, setHintMove] = useState<number | null>(null)
   const [hintSuggestion, setHintSuggestion] = useState<string | null>(null)
+  const [warningMsg, setWarningMsg] = useState<string | null>(null)
 
   const isAITurn = !isLocal && currentPlayer === aiColor && status === "playing"
 
-  // Timer 邏輯
   useEffect(() => {
     if (props.setupType !== "ai" || props.timer === "unlimited" || status !== "playing") return
     if (currentPlayer !== playerColor) return
-
     const limit = parseInt(props.timer)
     if (isNaN(limit)) return
-
     setTimeLeft(limit)
-
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval)
-          // 超時：跳過玩家回合，輪到 AI
-          setCurrentPlayer(aiColor)
-          return 0
-        }
+        if (prev <= 1) { clearInterval(interval); setCurrentPlayer(aiColor); return 0 }
         return prev - 1
       })
     }, 1000)
-
     return () => clearInterval(interval)
   }, [currentPlayer, status, props.timer, props.setupType])
 
-  // AI 落子邏輯
   useEffect(() => {
     if (!isAITurn) return
     setIsAiThinking(true)
     const timer = setTimeout(() => {
       const move = findBestMove(cloneBoard(board), aiColor, props.difficulty as Difficulty)
-      if (move) {
-        const [row, col] = move
-        place(row * BOARD_SIZE + col)
-      }
+      if (move) place(move[0] * BOARD_SIZE + move[1])
       setIsAiThinking(false)
     }, 400)
     return () => clearTimeout(timer)
@@ -1123,8 +1155,7 @@ function Game(props: {
     const [row, col] = indexToCoord(index)
     if (board[row][col] !== 0) return
 
-    setHintMove(null)
-    setHintSuggestion(null)
+    setHintMove(null); setHintSuggestion(null); setWarningMsg(null)
 
     const newBoard = cloneBoard(board)
     newBoard[row][col] = currentPlayer
@@ -1132,101 +1163,85 @@ function Game(props: {
     if (props.renju && currentPlayer === 1) {
       const result = checkForbidden(newBoard, row, col)
       if (result.type === "win") {
-        setBoard(newBoard)
-        setMoveHistory((m) => [...m, index])
-        setLastMove(index)
-        setWinner(1)
-        setStatus("won")
-        props.onGameOver("win")
+        setBoard(newBoard); setMoveHistory((m) => [...m, index]); setLastMove(index); setWinner(1); setStatus("won")
+        if (props.soundEnabled) speak(t.winVoiceAI)
+        props.onGameOver("win", 1)
         return
       }
       if (result.type !== "none") {
-        setForbiddenMsg(result.type)
-        props.openModal("forbidden")
-        return // 禁手：取消落子
+        setForbiddenMsg(result.type); props.openModal("forbidden"); return
       }
     }
 
     if (checkWin(newBoard, row, col, currentPlayer)) {
-      setBoard(newBoard)
-      setMoveHistory((m) => [...m, index])
-      setLastMove(index)
-      setWinner(currentPlayer)
-      setStatus("won")
-      props.onGameOver(currentPlayer === playerColor ? "win" : "lose")
+      setBoard(newBoard); setMoveHistory((m) => [...m, index]); setLastMove(index); setWinner(currentPlayer); setStatus("won")
+      
+      if (props.soundEnabled) {
+        if (isLocal) {
+          speak(currentPlayer === 1 ? t.winVoiceLocalBlack : t.winVoiceLocalWhite)
+        } else {
+          speak(currentPlayer === playerColor ? t.winVoiceAI : t.loseVoiceAI)
+        }
+      }
+
+      // 👇 直接將 currentPlayer 當作 winner 傳出去
+      props.onGameOver(currentPlayer === playerColor ? "win" : "lose", currentPlayer)
       return
     }
 
     if (checkDraw(newBoard)) {
-      setBoard(newBoard)
-      setMoveHistory((m) => [...m, index])
-      setLastMove(index)
-      setStatus("draw")
-      props.onGameOver("draw")
-      return
+      setBoard(newBoard); setMoveHistory((m) => [...m, index]); setLastMove(index); setStatus("draw"); props.onGameOver("draw", null); return
     }
 
-    setBoard(newBoard)
-    setMoveHistory((m) => [...m, index])
-    setLastMove(index)
-    setCurrentPlayer(currentPlayer === 1 ? 2 : 1)
+    setBoard(newBoard); setMoveHistory((m) => [...m, index]); setLastMove(index); setCurrentPlayer(currentPlayer === 1 ? 2 : 1)
 
-    // 重設 Timer
+    if (props.setupType === "ai" && props.difficulty === "Easy" && props.hintsEnabled) {
+      // 👇 直接檢查白棋 (aiColor)，因為我哋只想提玩家小心 AI 嘅威脅
+      if (checkThreat(newBoard, aiColor)) {
+        setWarningMsg(t.warningOpenThree)
+        if (props.soundEnabled) speak(t.warningOpenThree)
+      }
+    }
+
     if (props.setupType === "ai" && props.timer !== "unlimited") {
       setTimeLeft(parseInt(props.timer))
     }
   }
 
   const handleHint = () => {
-    if (!props.hintsEnabled || isAITurn || status !== "playing" || props.renju) return
-
+    if (!props.hintsEnabled || status !== "playing" || props.renju) return
     const move = findBestMove(cloneBoard(board), currentPlayer, props.difficulty as Difficulty)
     if (move) {
       const [r, c] = move
       setHintMove(r * BOARD_SIZE + c)
-      setHintSuggestion(coordToLabel(r, c))
+      const label = coordToLabel(r, c)
+      setHintSuggestion(label)
+      if (props.soundEnabled) speak(`${t.aiSuggest} ${label}`)
     }
   }
 
   const handleUndo = () => {
     if (moveHistory.length === 0) return
-    const stepsToUndo = 1 // 👈 改為只撤回 1 步
-    const newHistory = moveHistory.slice(0, -stepsToUndo)
+    const newHistory = moveHistory.slice(0, -1)
     const newBoard = createBoard()
     newHistory.forEach((idx, i) => {
       const [r, c] = indexToCoord(idx)
       newBoard[r][c] = (i % 2 === 0 ? 1 : 2) as Player
     })
-    setBoard(newBoard)
-    setMoveHistory(newHistory)
-    setCurrentPlayer((newHistory.length % 2 === 0 ? 1 : 2) as Player)
-    setStatus("playing")
-    setWinner(null)
-    setLastMove(newHistory.length > 0 ? newHistory[newHistory.length - 1] : null)
-    setHintMove(null)
-    setHintSuggestion(null)
-    props.openModal(null)
+    setBoard(newBoard); setMoveHistory(newHistory); setCurrentPlayer((newHistory.length % 2 === 0 ? 1 : 2) as Player); setStatus("playing"); setWinner(null); setLastMove(newHistory.length > 0 ? newHistory[newHistory.length - 1] : null); setHintMove(null); setHintSuggestion(null); setWarningMsg(null); props.openModal(null)
   }
 
   const handleRestart = () => {
-    setBoard(createBoard())
-    setMoveHistory([])
-    setCurrentPlayer(1)
-    setStatus("playing")
-    setWinner(null)
-    setLastMove(null)
-    setForbiddenMsg("")
-    setHintMove(null)
-    setHintSuggestion(null)
-    setTimeLeft(props.timer !== "unlimited" ? parseInt(props.timer) : 0)
-    props.openModal(null)
+    setBoard(createBoard()); setMoveHistory([]); setCurrentPlayer(1); setStatus("playing"); setWinner(null); setLastMove(null); setForbiddenMsg(""); setHintMove(null); setHintSuggestion(null); setWarningMsg(null); setTimeLeft(props.timer !== "unlimited" ? parseInt(props.timer) : 0); props.openModal(null)
   }
+
+  const winTitle = isLocal 
+    ? (winner === 1 ? t.blackWins : t.whiteWins)
+    : (winner === playerColor ? t.gameOverWinTitle : t.gameOverLoseTitle)
 
   const turnLabel =
     status === "won"
-      ? winner === playerColor
-        ? props.lang === "zh" ? "你贏咗！" : "You win!"
-        : `${t.ai} ${props.lang === "zh" ? "贏咗" : "wins"}`
+      ? winTitle
       : status === "draw"
         ? props.lang === "zh" ? "和局" : "Draw"
         : status === "forbidden"
@@ -1236,15 +1251,9 @@ function Game(props: {
   return (
     <div className={`board-theme-${props.boardStyle}`}>
       <div className="game-statusbar">
-        <div>
-          <span className={`live-dot ${props.renju ? "renju-dot" : ""}`} />
-          {t.gameStatus}
-        </div>
+        <div><span className={`live-dot ${props.renju ? "renju-dot" : ""}`} />{t.gameStatus}</div>
         <span>{props.renju ? t.renjuTitle : t.freeTitle}</span>
-        <button className="text-link danger" onClick={() => props.openModal("leave")}>
-          <Icon name="flag" size={17} />
-          {t.backHome}
-        </button>
+        <button className="text-link danger" onClick={() => props.openModal("leave")}><Icon name="flag" size={17} />{t.backHome}</button>
       </div>
       <div className="game-layout">
         <section className="board-area">
@@ -1253,62 +1262,31 @@ function Game(props: {
               <span className={`mode-badge ${props.renju ? "renju" : ""}`}>{props.renju ? t.renju : "Gomoku"}</span>
               <h1>{turnLabel}</h1>
             </div>
-            
-            {/* Timer 搬入去中間 */}
             {props.timer !== "unlimited" && props.setupType === "ai" && status === "playing" && (
               <div className={`board-timer ${timeLeft <= 5 ? "timer-danger" : ""}`}>
                 <span>{t.timer}</span>
-                <b>
-                  {String(Math.floor(timeLeft / 60)).padStart(2, "0")}:
-                  {String(timeLeft % 60).padStart(2, "0")}
-                </b>
+                <b>{String(Math.floor(timeLeft / 60)).padStart(2, "0")}:{String(timeLeft % 60).padStart(2, "0")}</b>
               </div>
             )}
-
             <div className="turn-legend">
               <span><i className="legend-stone black" />{t.black} · {t.you}</span>
               <span><i className="legend-stone white" />{t.white} · {t.ai}</span>
             </div>
           </div>
           {props.renju && <div className="forbidden-banner"><Icon name="flag" size={17} /><b>{t.forbiddenNote}</b><span>三三 · 四四 · 長連</span></div>}
-          {status === "forbidden" && (
-            <div className="forbidden-banner" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>
-              <Icon name="flag" size={17} />
-              <b>{forbiddenMsg === "double-three" ? "三三禁手！" : forbiddenMsg === "double-four" ? "四四禁手！" : "長連禁手！"}</b>
-            </div>
-          )}
+          {status === "forbidden" && <div className="forbidden-banner" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}><Icon name="flag" size={17} /><b>{forbiddenMsg === "double-three" ? "三三禁手！" : forbiddenMsg === "double-four" ? "四四禁手！" : "長連禁手！"}</b></div>}
+          
           <div className="board-shell">
-            <GomokuBoard
-              board={board}
-              onMove={(i) => {
-                setHintMove(null)
-                setHintSuggestion(null)
-                place(i)
-              }}
-              style={props.boardStyle}
-              lastMove={lastMove ?? undefined}
-              hintMove={hintMove}
-              currentPlayer={currentPlayer}
-            />
+            <GomokuBoard board={board} onMove={(i) => { setHintMove(null); setHintSuggestion(null); setWarningMsg(null); place(i) }} style={props.boardStyle} lastMove={lastMove ?? undefined} hintMove={hintMove} currentPlayer={currentPlayer} />
           </div>
-          {isAiThinking && (
-            <div style={{ textAlign: "center", marginTop: "10px", color: "var(--muted)", fontSize: "12px" }}>
-              {props.lang === "zh" ? "阿棋思考緊..." : "Ah Kei is thinking..."}
-            </div>
-          )}
+          {isAiThinking && <div style={{ textAlign: "center", marginTop: "10px", color: "var(--muted)", fontSize: "12px" }}>{props.lang === "zh" ? "阿棋思考緊..." : "Ah Kei is thinking..."}</div>}
         </section>
+        
         <aside className="game-panel">
           <div className="players">
-            <div className={`player ${currentPlayer === playerColor && status === "playing" ? "active" : ""}`}>
-              <span className="avatar text-avatar">你</span>
-              <div><small>{t.black}</small><b>{t.you}</b></div>
-              <i />
-            </div>
+            <div className={`player ${currentPlayer === playerColor && status === "playing" ? "active" : ""}`}><span className="avatar text-avatar">你</span><div><small>{t.black}</small><b>{t.you}</b></div><i /></div>
             <span className="versus">VS</span>
-            <div className={`player ${currentPlayer === aiColor && status === "playing" ? "active" : ""}`}>
-              <span className="avatar"><Panda small /></span>
-              <div><small>{t.white}</small><b>{t.ai}</b></div>
-            </div>
+            <div className={`player ${currentPlayer === aiColor && status === "playing" ? "active" : ""}`}><span className="avatar"><Panda small /></span><div><small>{t.white}</small><b>{t.ai}</b></div></div>
           </div>
           
           <div className="detail-list">
@@ -1319,65 +1297,36 @@ function Game(props: {
             <div><span>{t.timer}</span><b>{props.timer === "unlimited" ? t.unlimited : props.timer}</b></div>
           </div>
           <div className="history">
-            <div className="panel-title">
-              <h3>{t.moveHistory}</h3>
-              <span>{moveHistory.length} {t.moves}</span>
-            </div>
+            <div className="panel-title"><h3>{t.moveHistory}</h3><span>{moveHistory.length} {t.moves}</span></div>
             <div className="move-grid">
-              {moveHistory.map((m, i) => {
-                const [r, c] = indexToCoord(m)
-                return (
-                  <span key={`${m}-${i}`}>
-                    <small>{i + 1}</small>
-                    <i className={i % 2 ? "white" : "black"} />
-                    {coordToLabel(r, c)}
-                  </span>
-                )
-              })}
+              {moveHistory.map((m, i) => { const [r, c] = indexToCoord(m); return <span key={`${m}-${i}`}><small>{i + 1}</small><i className={i % 2 ? "white" : "black"} />{coordToLabel(r, c)}</span> })}
             </div>
           </div>
           
           <div className="game-controls">
-            {/* 提示：只在一般遊玩 AI 模式先有，並且要開啟提示功能 */}
-            {!props.renju && props.setupType === "ai" && (
-              <button
-                className="button button-secondary"
-                onClick={handleHint}
-                disabled={!props.hintsEnabled}
-                style={{ opacity: props.hintsEnabled ? 1 : 0.5, cursor: props.hintsEnabled ? "pointer" : "not-allowed" }}
-              >
-                <Icon name="bulb" />
-                {t.hint}
-              </button>
+            {!props.renju && props.hintsEnabled && (
+              <button className="button button-secondary" onClick={handleHint}><Icon name="bulb" />{t.hint}</button>
             )}
             
-            {/* 悔棋：連珠模式冇，只撤回 1 步 */}
             {!props.renju && (
-              <button className="button button-secondary" onClick={handleUndo}>
-                <Icon name="undo" />
-                {t.undo}
-              </button>
+              <button className="button button-secondary" onClick={handleUndo}><Icon name="undo" />{t.undo}</button>
             )}
             
-            <button className="button button-ghost" onClick={handleRestart}>
-              <Icon name="refresh" />
-              {t.restart}
-            </button>
-            <button className="button button-ghost danger-text" onClick={() => props.openModal("leave")}>
-              <Icon name="flag" />
-              {t.backHome}
-            </button>
+            <button className="button button-ghost" onClick={handleRestart}><Icon name="refresh" />{t.restart}</button>
+            <button className="button button-ghost danger-text" onClick={() => props.openModal("leave")}><Icon name="flag" />{t.backHome}</button>
           </div>
 
-          {/* 顯示提示文字（喺掣下面） */}
           {hintSuggestion && props.hintsEnabled && (
             <div className="hint-display">
               <Icon name="bulb" size={16} />
-              <span>
-                {props.lang === "zh" 
-                  ? `阿棋建議落喺 ${hintSuggestion}，試吓啦！` 
-                  : `Ah Kei suggests playing at ${hintSuggestion}. Give it a try!`}
-              </span>
+              <span>{props.lang === "zh" ? `阿棋建議落喺 ${hintSuggestion}，試吓啦！` : `Ah Kei suggests playing at ${hintSuggestion}. Give it a try!`}</span>
+            </div>
+          )}
+
+          {warningMsg && props.hintsEnabled && props.difficulty === "Easy" && (
+            <div className="hint-display" style={{ background: "var(--accent-soft)", color: "var(--accent)", borderColor: "var(--accent)", marginTop: "8px" }}>
+              <Icon name="flag" size={16} />
+              <span style={{ color: "var(--accent)", fontWeight: "bold" }}>{warningMsg}</span>
             </div>
           )}
         </aside>
@@ -1444,7 +1393,7 @@ function Profile({ lang, openModal, navigate }: { lang: Lang; openModal: (m: Mod
   )
 }
 
-function Settings(props: { lang: Lang; theme: Theme; setLang: (l: Lang) => void; setTheme: (t: Theme) => void; boardStyle: string; setBoardStyle: (s: string) => void; navigate: (p: Page) => void; saved: () => void; }) {
+function Settings(props: { lang: Lang; theme: Theme; setLang: (l: Lang) => void; setTheme: (t: Theme) => void; boardStyle: string; setBoardStyle: (s: string) => void; navigate: (p: Page) => void; saved: () => void; setSoundEnabled: (v: boolean) => void;soundEnabled: boolean; }) {
   const t = copy[props.lang]
   const [sound, setSound] = useState(true)
   const [tts, setTts] = useState(true)
@@ -1462,7 +1411,9 @@ function Settings(props: { lang: Lang; theme: Theme; setLang: (l: Lang) => void;
           <SettingRow icon="play" title={t.boardStyle} body={props.lang === "zh" ? "棋盤風格會套用至所有對局。" : "Your board style applies to every game."}>
             <div className="board-options">{[["wood", t.wood], ["classic", t.classic], ["minimal", t.minimal], ["neon", props.lang === "zh" ? "冰火" : "Neon"]].map(([id, label]) => (<button className={props.boardStyle === id ? "active" : ""} onClick={() => props.setBoardStyle(id)} key={id}><span className={`board-preview ${id}`} />{label}<i>{props.boardStyle === id && <Icon name="check" size={13} />}</i></button>))}</div>
           </SettingRow>
-          <SettingRow icon="sound" title={t.sound} body={props.lang === "zh" ? "落子、勝出及介面提示音效。" : "Move, victory and interface sound effects."}><Toggle value={sound} setValue={setSound} /></SettingRow>
+          <SettingRow icon="sound" title={t.sound} body={props.lang === "zh" ? "落子、勝出及介面提示音效。" : "Move, victory and interface sound effects."}>
+            <Toggle value={props.soundEnabled} setValue={props.setSoundEnabled} />
+          </SettingRow>
           <SettingRow icon="sound" title={t.tts} body={t.ttsNote}><Toggle value={tts} setValue={setTts} /></SettingRow>
           <div className="settings-actions"><button className="button button-ghost" onClick={() => props.navigate("home")}>{t.cancel}</button><button className="button button-primary" onClick={props.saved}><Icon name="check" />{t.save}</button></div>
         </div>
@@ -1492,6 +1443,9 @@ function ModalLayer(props: {
   timer: string; setTimer: (s: string) => void; startGame: () => void; logout: () => void; undo: () => void;
   hintsEnabled: boolean
   setHintsEnabled: (v: boolean) => void
+  soundEnabled: boolean
+  setSoundEnabled: (v: boolean) => void
+  gameWinner: Player | null
 }) {
   const t = copy[props.lang]
   const [sent, setSent] = useState(false)
@@ -1501,13 +1455,25 @@ function ModalLayer(props: {
     logout: t.logoutTitle, hint: t.hintTitle, undo: t.undoTitle, restart: t.restartTitle,
     leave: t.leaveTitle, correct: t.correctTitle, incorrect: t.incorrectTitle, challengeFail: t.challengeFailTitle, complete: t.finishTitle,
     record: t.recordTitle, gameOverWin: t.gameOverWinTitle, gameOverLose: t.gameOverLoseTitle, gameOverDraw: t.gameOverDrawTitle,
-    forbidden: t.forbiddenTitle,  
+    forbidden: t.forbiddenTitle, lessonWin: t.lessonCorrectTitle, lessonLose: t.lessonFailTitle,
   }
   const bodyMap: Partial<Record<Exclude<Modal, null>, string>> = {
     logout: t.logoutBody, hint: t.hintBody, undo: t.undoBody, restart: t.restartBody,
     leave: t.leaveBody, correct: t.correctBody, incorrect: t.incorrectBody, challengeFail: t.challengeFailBody, complete: t.finishBody,
     gameOverWin: t.gameOverWinBody, gameOverLose: t.gameOverLoseBody, gameOverDraw: t.gameOverDrawBody,
-    forbidden: t.forbiddenBody,
+    forbidden: t.forbiddenBody, lessonWin: t.lessonCorrectBody, lessonLose: t.lessonFailBody,
+  }
+  let finalTitle = titleMap[props.modal]
+  let finalBody = bodyMap[props.modal]
+
+  if (props.setupType === "local" && (props.modal === "gameOverWin" || props.modal === "gameOverLose")) {
+    if (props.gameWinner === 1) {
+      finalTitle = t.blackWins
+      finalBody = props.lang === "zh" ? "黑棋成功連成一線！" : "Black connected five in a row!"
+    } else if (props.gameWinner === 2) {
+      finalTitle = t.whiteWins
+      finalBody = props.lang === "zh" ? "白棋成功連成一線！" : "White connected five in a row!"
+    }
   }
 
   if (props.modal === "setup") return (
@@ -1582,22 +1548,31 @@ function ModalLayer(props: {
     gameOverWin: (<><button className="button button-ghost" onClick={() => props.navigate("home")}>{t.backToMain}</button><button className="button button-primary" onClick={() => { props.close(); props.startGame(); }}>{t.playAgain}</button></>),
     gameOverLose: (<><button className="button button-ghost" onClick={() => props.navigate("home")}>{t.backToMain}</button><button className="button button-primary" onClick={() => { props.close(); props.startGame(); }}>{t.playAgain}</button></>),
     gameOverDraw: (<><button className="button button-ghost" onClick={() => props.navigate("home")}>{t.backToMain}</button><button className="button button-primary" onClick={() => { props.close(); props.startGame(); }}>{t.playAgain}</button></>),
-    forbidden: (
-      <button className="button button-primary" onClick={props.close}>
-        {t.gotIt}
+    forbidden: (<button className="button button-primary" onClick={props.close}>{t.gotIt}</button>),
+    lessonWin: (
+      <button className="button button-primary" onClick={() => { props.close(); props.navigate("lessons"); }}>
+        {t.backLessons}
+      </button>
+    ),
+    lessonLose: (
+      <button className="button button-primary" onClick={() => { props.close(); props.navigate("lessons"); }}>
+        {t.tryAgain}
       </button>
     ),
   }
 
-  return (
+    return (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && props.close()}>
       <div className="modal feedback-modal" role="dialog" aria-modal="true">
         <button className="modal-close" onClick={props.close}><Icon name="close" /></button>
         <div className={`feedback-icon ${props.modal}`}>
           <Icon name={props.modal === "hint" ? "bulb" : props.modal === "incorrect" || props.modal === "challengeFail" || props.modal === "leave" || props.modal === "logout" ? "flag" : props.modal === "record" ? "play" : "check"} size={28} />
         </div>
-        <h2>{titleMap[props.modal]}</h2>
-        <p>{bodyMap[props.modal]}</p>
+        
+        {/* 👇 呢度改用 finalTitle 同 finalBody */}
+        <h2>{finalTitle}</h2>
+        <p>{finalBody}</p>
+        
         {props.modal === "hint" && <div className="hint-coordinate"><b>H8</b><span>{t.openThree}</span></div>}
         {props.modal === "record" && <div className="record-summary"><div><span>{t.result}</span><b>{t.won}</b></div><div><span>{t.mode}</span><b>Gomoku · AI</b></div><div><span>{t.moves}</span><b>42</b></div><div><span>{t.duration}</span><b>08:42</b></div></div>}
         <div className="modal-actions centered">{actions[props.modal]}</div>
