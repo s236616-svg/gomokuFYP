@@ -235,6 +235,7 @@ const copy = {
     lessonFailTitle: "哎呀，輸咗喇！",
     lessonFailBody: "你睇，如果唔擋住對手嘅活三，佢下一步就會連成四粒，再下一步就贏喇！",
     lessonFailVoice: "哎呀，你睇，如果唔擋住對手嘅活三，佢下一步就會贏啦！",
+    nextLevel: "下一關",
   },
   en: {
     brand: "Gomoku Joy",
@@ -448,6 +449,7 @@ const copy = {
     lessonFailTitle: "Oh no, you lost!",
     lessonFailBody: "See? If you don't block an open three, they will make a four and then win!",
     lessonFailVoice: "Oh no, see? If you don't block the open three, they will win!",
+    nextLevel: "Next Level",
   },
 } as const
 
@@ -533,10 +535,10 @@ function App() {
   const [boardStyle, setBoardStyle] = useState("wood")
   const [hintsEnabled, setHintsEnabled] = useState(true)
   const [soundEnabled, setSoundEnabled] = useState(true)
-  const [ttsEnabled, setTtsEnabled] = useState(true)
   const [gameOverResult, setGameOverResult] = useState<"win" | "lose" | "draw" | null>(null)
   const [gameWinner, setGameWinner] = useState<Player | null>(null)
   const [gameKey, setGameKey] = useState(0)
+  const [lessonKey, setLessonKey] = useState(0)
   const t = copy[lang]
 
   useEffect(() => {
@@ -545,14 +547,11 @@ function App() {
     sessionStorage.setItem("gomoku-lang", lang)
   }, [theme, lang])
 
-    useEffect(() => {
-    // 直接跟 soundEnabled 開關把聲
+  useEffect(() => {
     setSpeechEnabled(soundEnabled)
-    
     if (!soundEnabled && "speechSynthesis" in window) {
       window.speechSynthesis.cancel()
     }
-    
     sessionStorage.setItem("gomoku-sound", soundEnabled ? "true" : "false")
   }, [soundEnabled])
 
@@ -596,7 +595,22 @@ function App() {
           <main>
             {page === "home" && <Home lang={lang} navigate={navigate} openSetup={openSetup} openModal={setModal} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled} />}
             {page === "lessons" && <Lessons lang={lang} navigate={navigate} />}
-            {page === "lesson" && <Lesson lang={lang} navigate={navigate} moves={lessonMoves} setMoves={setLessonMoves} audioPlaying={audioPlaying} setAudioPlaying={setAudioPlaying} openModal={setModal} />}
+                        {page === "lesson" && (
+              <Lesson 
+                key={lessonKey}
+                lang={lang} 
+                navigate={navigate} 
+                moves={lessonMoves} 
+                setMoves={setLessonMoves} 
+                audioPlaying={audioPlaying} 
+                setAudioPlaying={setAudioPlaying} 
+                openModal={setModal} 
+                restartLesson={() => {
+                  setLessonKey(k => k + 1);
+                  setModal(null);
+                }}
+              />
+            )}
             {page === "challenge" && <Challenge lang={lang} navigate={navigate} openModal={setModal} />}
             {page === "game" && (
               <Game
@@ -610,17 +624,16 @@ function App() {
                 openModal={setModal}
                 hintsEnabled={hintsEnabled}
                 soundEnabled={soundEnabled}
-                onGameOver={(result, winner) => { // 👈 接收 winner
+                onGameOver={(result, winner) => { 
                   setGameOverResult(result)
-                  setGameWinner(winner) // 👈 儲存贏家
+                  setGameWinner(winner) 
                   setModal(result === "win" ? "gameOverWin" : result === "lose" ? "gameOverLose" : "gameOverDraw")
                 }}
               />
             )}
             {page === "leaderboard" && <Leaderboard lang={lang} navigate={navigate} />}
             {page === "profile" && <Profile lang={lang} openModal={setModal} navigate={navigate} />}
-            {page === "settings" && <Settings lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} boardStyle={boardStyle} setBoardStyle={setBoardStyle} navigate={navigate} saved={() => setToast(t.saved)} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}  ttsEnabled={ttsEnabled}             // 👈 加呢行
-                setTtsEnabled={setTtsEnabled}/>}
+            {page === "settings" && <Settings lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} boardStyle={boardStyle} setBoardStyle={setBoardStyle} navigate={navigate} saved={() => setToast(t.saved)} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled} />}
           </main>
           <MobileNav page={page} lang={lang} navigate={navigate} openSetup={openSetup} />
         </>
@@ -634,6 +647,7 @@ function App() {
           setFirstMove={setFirstMove} timer={timer} setTimer={setTimer}
           startGame={startGame} logout={() => navigate("login")}
           undo={() => { setGameMoves((m) => m.slice(0, -2)); setModal(null) }}
+          restartLesson={() => { setLessonKey(k => k + 1); setModal(null)}}
           hintsEnabled={hintsEnabled} setHintsEnabled={setHintsEnabled}
           soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}
           gameWinner={gameWinner}
@@ -801,13 +815,11 @@ function Home({ lang, navigate, openSetup, openModal, soundEnabled, setSoundEnab
           </div>
           <div className="mascot-home"><Panda /></div>
           
-          {/* 👇 還原並更新咗嘅氣泡掣 */}
           <div 
             className={`tip-bubble tip-bubble-${lang}`} 
             onClick={() => {
               const next = !soundEnabled
               setSoundEnabled(next)
-              // 👇 加 true，強制無視 isSoundOn 狀態讀出歡迎語
               if (next) speak(t.voiceOn, true) 
             }}
             style={{ cursor: "pointer" }}
@@ -897,24 +909,23 @@ function Lesson(props: {
   audioPlaying: boolean
   setAudioPlaying: (v: boolean) => void
   openModal: (m: Modal) => void
+  restartLesson: () => void
 }) {
   const t = copy[props.lang]
   
-  // 初始局面：白棋活三
   const [board, setBoard] = useState<Board>(() => {
     const b = createBoard()
-    b[6][7] = 1; b[8][7] = 1; b[9][7] = 1; b[8][8] = 1; // 黑
-    b[7][6] = 2; b[7][7] = 2; b[7][8] = 2; // 白活三
+    b[6][7] = 1; b[8][7] = 1; b[9][7] = 1; b[8][8] = 1;
+    b[7][6] = 2; b[7][7] = 2; b[7][8] = 2; 
     return b
   })
   
   const [currentPlayer, setCurrentPlayer] = useState<Player>(1)
   const [status, setStatus] = useState<"playing" | "won" | "lose">("playing")
   const [isAiThinking, setIsAiThinking] = useState(false)
-  const [turnCount, setTurnCount] = useState(0) // 紀錄回合數，用嚟控制 AI 行為
+  const [turnCount, setTurnCount] = useState(0)
 
   const checkBlockSuccess = (r: number, c: number) => {
-    // 玩家第一步必須落喺 (7,5) 或 (7,9)
     return (r === 7 && c === 5) || (r === 7 && c === 9)
   }
 
@@ -924,22 +935,19 @@ function Lesson(props: {
     if (board[r][c] !== 0) return
 
     const newBoard = cloneBoard(board)
-    newBoard[r][c] = 1 // 玩家落子
+    newBoard[r][c] = 1 
     setBoard(newBoard)
 
-    // 如果係第一步，而且成功防守
     if (turnCount === 0 && checkBlockSuccess(r, c)) {
       setStatus("won")
-      if (props.lang === "zh") speak(t.lessonCorrectVoice)
+      speak(t.lessonCorrectVoice)
       props.openModal("lessonWin")
       return
     }
 
-    // 輪到白棋
     setCurrentPlayer(2)
   }
 
-  // AI 自動落子邏輯
   useEffect(() => {
     if (currentPlayer !== 2 || status !== "playing") return
     setIsAiThinking(true)
@@ -949,14 +957,12 @@ function Lesson(props: {
       let move: [number, number] | null = null
       
       if (turnCount === 0) {
-        // 第一步：玩家落錯，白棋形成活四
         if (b[7][5] === 0) move = [7, 5]
         else if (b[7][9] === 0) move = [7, 9]
       } else if (turnCount === 1) {
-        // 第二步：玩家擋咗一邊，白棋喺另一邊連成五連
         if (b[7][5] === 0) move = [7, 5]
         else if (b[7][9] === 0) move = [7, 9]
-        else if (b[7][4] === 0) move = [7, 4] // 如果兩邊都被封，再搵位
+        else if (b[7][4] === 0) move = [7, 4]
         else if (b[7][10] === 0) move = [7, 10]
       }
 
@@ -964,14 +970,13 @@ function Lesson(props: {
         b[move[0]][move[1]] = 2
         setBoard(b)
         
-        // 白棋行完，檢查有冇贏
         if (checkWin(b, move[0], move[1], 2)) {
           setStatus("lose")
-          if (props.lang === "zh") speak(t.lessonFailVoice)
+          speak(t.lessonFailVoice)
           props.openModal("lessonLose")
         } else {
-          setCurrentPlayer(1) // 輪返玩家
-          setTurnCount(c => c + 1) // 回合數 + 1
+          setCurrentPlayer(1)
+          setTurnCount(c => c + 1)
         }
       }
       setIsAiThinking(false)
@@ -980,7 +985,6 @@ function Lesson(props: {
     return () => clearTimeout(timer)
   }, [currentPlayer, status, board, turnCount, props.lang, t])
 
-  // 進入教學畫面時自動播語音
   useEffect(() => {
     if (props.lang === "zh") {
       speak("白棋好像有動靜，試吓落一步擋住佢？");
@@ -1202,7 +1206,6 @@ function Game(props: {
         }
       }
 
-      // 👇 直接將 currentPlayer 當作 winner 傳出去
       props.onGameOver(currentPlayer === playerColor ? "win" : "lose", currentPlayer)
       return
     }
@@ -1214,7 +1217,6 @@ function Game(props: {
     setBoard(newBoard); setMoveHistory((m) => [...m, index]); setLastMove(index); setCurrentPlayer(currentPlayer === 1 ? 2 : 1)
 
     if (props.setupType === "ai" && props.difficulty === "Easy" && props.hintsEnabled) {
-      // 👇 直接檢查白棋 (aiColor)，因為我哋只想提玩家小心 AI 嘅威脅
       if (checkThreat(newBoard, aiColor)) {
         setWarningMsg(t.warningOpenThree)
         if (props.soundEnabled) speak(t.warningOpenThree)
@@ -1456,7 +1458,6 @@ function Settings(props: {
             </div>
           </SettingRow>
           
-          {/* 👇 將音效同語音合併做一個掣 */}
           <SettingRow 
             icon="sound" 
             title={props.lang === "zh" ? "語音及音效" : "Voice & Sound"} 
@@ -1494,7 +1495,7 @@ function ModalLayer(props: {
   renju: boolean; setupType: "ai" | "local"; setSetupType: (s: "ai" | "local") => void;
   difficulty: string; setDifficulty: (s: string) => void; firstMove: string; setFirstMove: (s: string) => void;
   timer: string; setTimer: (s: string) => void; startGame: () => void; logout: () => void; undo: () => void;
-  hintsEnabled: boolean
+  hintsEnabled: boolean; restartLesson: () => void
   setHintsEnabled: (v: boolean) => void
   soundEnabled: boolean
   setSoundEnabled: (v: boolean) => void
@@ -1602,19 +1603,35 @@ function ModalLayer(props: {
     gameOverLose: (<><button className="button button-ghost" onClick={() => props.navigate("home")}>{t.backToMain}</button><button className="button button-primary" onClick={() => { props.close(); props.startGame(); }}>{t.playAgain}</button></>),
     gameOverDraw: (<><button className="button button-ghost" onClick={() => props.navigate("home")}>{t.backToMain}</button><button className="button button-primary" onClick={() => { props.close(); props.startGame(); }}>{t.playAgain}</button></>),
     forbidden: (<button className="button button-primary" onClick={props.close}>{t.gotIt}</button>),
-    lessonWin: (
-      <button className="button button-primary" onClick={() => { props.close(); props.navigate("lessons"); }}>
-        {t.backLessons}
-      </button>
+        lessonWin: (
+      <>
+        <button className="button button-ghost" onClick={() => props.restartLesson()}>
+          {t.tryAgain}
+        </button>
+        <button className="button button-ghost" onClick={() => props.navigate("lessons")}>
+          {t.backLessons}
+        </button>
+        <button className="button button-primary" onClick={() => props.navigate("challenge")}>
+          {t.nextLevel}
+        </button>
+      </>
     ),
     lessonLose: (
-      <button className="button button-primary" onClick={() => { props.close(); props.navigate("lessons"); }}>
-        {t.tryAgain}
-      </button>
+      <>
+        <button className="button button-ghost" onClick={() => props.restartLesson()}>
+          {t.tryAgain}
+        </button>
+        <button className="button button-ghost" onClick={() => props.navigate("lessons")}>
+          {t.backLessons}
+        </button>
+        <button className="button button-primary" onClick={() => props.navigate("challenge")}>
+          {t.nextLevel}
+        </button>
+      </>
     ),
   }
 
-    return (
+  return (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && props.close()}>
       <div className="modal feedback-modal" role="dialog" aria-modal="true">
         <button className="modal-close" onClick={props.close}><Icon name="close" /></button>
@@ -1622,7 +1639,6 @@ function ModalLayer(props: {
           <Icon name={props.modal === "hint" ? "bulb" : props.modal === "incorrect" || props.modal === "challengeFail" || props.modal === "leave" || props.modal === "logout" ? "flag" : props.modal === "record" ? "play" : "check"} size={28} />
         </div>
         
-        {/* 👇 呢度改用 finalTitle 同 finalBody */}
         <h2>{finalTitle}</h2>
         <p>{finalBody}</p>
         
