@@ -1342,9 +1342,9 @@ function Game(props: {
           )}
 
           {warningMsg && props.hintsEnabled && props.difficulty === "Easy" && (
-            <div className="hint-display" style={{ background: "var(--accent-soft)", color: "var(--accent)", borderColor: "var(--accent)", marginTop: "8px" }}>
+            <div className="hint-display warning" style={{ marginTop: "8px" }}>
               <Icon name="flag" size={16} />
-              <span style={{ color: "var(--accent)", fontWeight: "bold" }}>{warningMsg}</span>
+              <span style={{ fontWeight: "bold" }}>{warningMsg}</span>
             </div>
           )}
         </aside>

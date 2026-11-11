@@ -511,3 +511,21 @@ h1, h2, h3 { letter-spacing: -.035em; }
 .hint-display span {
   color: var(--text);
 }
+
+/* 預設警示 (Light Mode) */
+.hint-display.warning {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* 👇 針對 Dark Mode 嘅中盤警示顏色優化 */
+:root[data-theme="dark"] .hint-display.warning {
+  background: rgba(220, 38, 38, 0.15); /* 深色半透明紅底 */
+  color: #ff8a8a; /* 淺紅色文字 */
+  border: 1px solid rgba(255, 138, 138, 0.3);
+}
+
+:root[data-theme="dark"] .hint-display.warning span {
+  color: #ff8a8a !important; /* 強制文字變淺紅 */
+}
