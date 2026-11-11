@@ -325,7 +325,7 @@ export function findBestMove(
   const threatMove = findThreatBlockingMove(board, aiPlayer);
   if (threatMove) return threatMove;
 
-  const depthMap: Record<Difficulty, number> = { Easy: 2, Medium: 4, Hard: 5 };
+  const depthMap: Record<Difficulty, number> = { Easy: 2, Medium: 4, Hard: 7 };
   const randomnessMap: Record<Difficulty, number> = { Easy: 0.15, Medium: 0.05, Hard: 0 };
   const maxCandidatesMap: Record<Difficulty, number> = { Easy: 10, Medium: 14, Hard: 18 };
 

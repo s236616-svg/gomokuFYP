@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
-import { speak } from "./utils/speech"
 import { checkThreat } from "./game/logic"
+import { speak, setSpeechEnabled } from "./utils/speech"
 
 import {
   createBoard,
@@ -533,6 +533,7 @@ function App() {
   const [boardStyle, setBoardStyle] = useState("wood")
   const [hintsEnabled, setHintsEnabled] = useState(true)
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const [ttsEnabled, setTtsEnabled] = useState(true)
   const [gameOverResult, setGameOverResult] = useState<"win" | "lose" | "draw" | null>(null)
   const [gameWinner, setGameWinner] = useState<Player | null>(null)
   const [gameKey, setGameKey] = useState(0)
@@ -543,6 +544,17 @@ function App() {
     sessionStorage.setItem("gomoku-theme", theme)
     sessionStorage.setItem("gomoku-lang", lang)
   }, [theme, lang])
+
+    useEffect(() => {
+    // 直接跟 soundEnabled 開關把聲
+    setSpeechEnabled(soundEnabled)
+    
+    if (!soundEnabled && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel()
+    }
+    
+    sessionStorage.setItem("gomoku-sound", soundEnabled ? "true" : "false")
+  }, [soundEnabled])
 
   useEffect(() => {
     if (!toast) return
@@ -607,7 +619,8 @@ function App() {
             )}
             {page === "leaderboard" && <Leaderboard lang={lang} navigate={navigate} />}
             {page === "profile" && <Profile lang={lang} openModal={setModal} navigate={navigate} />}
-            {page === "settings" && <Settings lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} boardStyle={boardStyle} setBoardStyle={setBoardStyle} navigate={navigate} saved={() => setToast(t.saved)} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}/>}
+            {page === "settings" && <Settings lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} boardStyle={boardStyle} setBoardStyle={setBoardStyle} navigate={navigate} saved={() => setToast(t.saved)} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}  ttsEnabled={ttsEnabled}             // 👈 加呢行
+                setTtsEnabled={setTtsEnabled}/>}
           </main>
           <MobileNav page={page} lang={lang} navigate={navigate} openSetup={openSetup} />
         </>
@@ -787,12 +800,15 @@ function Home({ lang, navigate, openSetup, openModal, soundEnabled, setSoundEnab
             {Array.from({ length: 49 }, (_, i) => (<i key={i} className={[10, 17, 24].includes(i) ? "black" : [11, 18].includes(i) ? "white" : ""} />))}
           </div>
           <div className="mascot-home"><Panda /></div>
+          
+          {/* 👇 還原並更新咗嘅氣泡掣 */}
           <div 
             className={`tip-bubble tip-bubble-${lang}`} 
             onClick={() => {
               const next = !soundEnabled
               setSoundEnabled(next)
-              if (next) speak(t.voiceOn)
+              // 👇 加 true，強制無視 isSoundOn 狀態讀出歡迎語
+              if (next) speak(t.voiceOn, true) 
             }}
             style={{ cursor: "pointer" }}
           >
@@ -802,8 +818,10 @@ function Home({ lang, navigate, openSetup, openModal, soundEnabled, setSoundEnab
               <b>{soundEnabled ? t.narrationOn : (lang === "zh" ? "語音已關閉" : "Voice is off")}</b>
             </span>
           </div>
+
         </div>
       </section>
+      
       <section className="content-section">
         <div className="section-heading">
           <div><span className="eyebrow accent">{t.greeting}</span><h2>{t.chooseMode}</h2><p>{t.chooseModeSub}</p></div>
@@ -1393,29 +1411,64 @@ function Profile({ lang, openModal, navigate }: { lang: Lang; openModal: (m: Mod
   )
 }
 
-function Settings(props: { lang: Lang; theme: Theme; setLang: (l: Lang) => void; setTheme: (t: Theme) => void; boardStyle: string; setBoardStyle: (s: string) => void; navigate: (p: Page) => void; saved: () => void; setSoundEnabled: (v: boolean) => void;soundEnabled: boolean; }) {
+function Settings(props: { 
+  lang: Lang; 
+  theme: Theme; 
+  setLang: (l: Lang) => void; 
+  setTheme: (t: Theme) => void; 
+  boardStyle: string; 
+  setBoardStyle: (s: string) => void; 
+  navigate: (p: Page) => void; 
+  saved: () => void; 
+  setSoundEnabled: (v: boolean) => void;
+  soundEnabled: boolean; 
+}) {
   const t = copy[props.lang]
-  const [sound, setSound] = useState(true)
-  const [tts, setTts] = useState(true)
+  
   return (
     <div>
       <PageIntro eyebrow={t.settings} title={t.settingsTitle} body={t.settingsSub} back={t.backHome} onBack={() => props.navigate("home")} />
       <section className="content-section settings-section">
         <div className="settings-card">
           <SettingRow icon="globe" title={t.language} body={props.lang === "zh" ? "顯示所有導覽、按鈕及訊息的語言。" : "Language used for navigation, buttons and messages."}>
-            <div className="segmented"><button className={props.lang === "zh" ? "active" : ""} onClick={() => props.setLang("zh")}>繁體中文</button><button className={props.lang === "en" ? "active" : ""} onClick={() => props.setLang("en")}>English</button></div>
+            <div className="segmented">
+              <button className={props.lang === "zh" ? "active" : ""} onClick={() => props.setLang("zh")}>繁體中文</button>
+              <button className={props.lang === "en" ? "active" : ""} onClick={() => props.setLang("en")}>English</button>
+            </div>
           </SettingRow>
+          
           <SettingRow icon={props.theme === "light" ? "sun" : "moon"} title={t.appearance} body={props.lang === "zh" ? "選擇最舒適的閱讀模式。" : "Choose the viewing mode most comfortable for you."}>
-            <div className="theme-options"><button className={props.theme === "light" ? "active" : ""} onClick={() => props.setTheme("light")}><span className="theme-preview light-preview"><i /><i /></span><b>{t.light}</b></button><button className={props.theme === "dark" ? "active" : ""} onClick={() => props.setTheme("dark")}><span className="theme-preview dark-preview"><i /><i /></span><b>{t.dark}</b></button></div>
+            <div className="theme-options">
+              <button className={props.theme === "light" ? "active" : ""} onClick={() => props.setTheme("light")}><span className="theme-preview light-preview"><i /><i /></span><b>{t.light}</b></button>
+              <button className={props.theme === "dark" ? "active" : ""} onClick={() => props.setTheme("dark")}><span className="theme-preview dark-preview"><i /><i /></span><b>{t.dark}</b></button>
+            </div>
           </SettingRow>
+          
           <SettingRow icon="play" title={t.boardStyle} body={props.lang === "zh" ? "棋盤風格會套用至所有對局。" : "Your board style applies to every game."}>
-            <div className="board-options">{[["wood", t.wood], ["classic", t.classic], ["minimal", t.minimal], ["neon", props.lang === "zh" ? "冰火" : "Neon"]].map(([id, label]) => (<button className={props.boardStyle === id ? "active" : ""} onClick={() => props.setBoardStyle(id)} key={id}><span className={`board-preview ${id}`} />{label}<i>{props.boardStyle === id && <Icon name="check" size={13} />}</i></button>))}</div>
+            <div className="board-options">
+              {[["wood", t.wood], ["classic", t.classic], ["minimal", t.minimal], ["neon", props.lang === "zh" ? "冰火" : "Neon"]].map(([id, label]) => (
+                <button className={props.boardStyle === id ? "active" : ""} onClick={() => props.setBoardStyle(id)} key={id}>
+                  <span className={`board-preview ${id}`} />
+                  {label}
+                  <i>{props.boardStyle === id && <Icon name="check" size={13} />}</i>
+                </button>
+              ))}
+            </div>
           </SettingRow>
-          <SettingRow icon="sound" title={t.sound} body={props.lang === "zh" ? "落子、勝出及介面提示音效。" : "Move, victory and interface sound effects."}>
+          
+          {/* 👇 將音效同語音合併做一個掣 */}
+          <SettingRow 
+            icon="sound" 
+            title={props.lang === "zh" ? "語音及音效" : "Voice & Sound"} 
+            body={props.lang === "zh" ? "落子音效、勝出語音及廣東話教學語音。" : "Move sounds, victory voice, and Cantonese narration."}
+          >
             <Toggle value={props.soundEnabled} setValue={props.setSoundEnabled} />
           </SettingRow>
-          <SettingRow icon="sound" title={t.tts} body={t.ttsNote}><Toggle value={tts} setValue={setTts} /></SettingRow>
-          <div className="settings-actions"><button className="button button-ghost" onClick={() => props.navigate("home")}>{t.cancel}</button><button className="button button-primary" onClick={props.saved}><Icon name="check" />{t.save}</button></div>
+          
+          <div className="settings-actions">
+            <button className="button button-ghost" onClick={() => props.navigate("home")}>{t.cancel}</button>
+            <button className="button button-primary" onClick={props.saved}><Icon name="check" />{t.save}</button>
+          </div>
         </div>
       </section>
     </div>
