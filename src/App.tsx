@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
-import { checkThreat } from "./game/logic"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { speak, setSpeechEnabled } from "./utils/speech"
 
 import {
@@ -11,6 +10,9 @@ import {
   findBestMove,
   indexToCoord,
   coordToLabel,
+  checkThreat,
+  getEvaluationScores,
+  findThreatPositions,
   type Board,
   type Player,
   type Difficulty,
@@ -20,7 +22,7 @@ import {
 type Lang = "zh" | "en"
 type Theme = "light" | "dark"
 type Page = "login" | "home" | "lessons" | "lesson" | "challenge" | "game" | "leaderboard" | "profile" | "settings"
-type Modal = "signup" | "forgot" | "logout" | "setup" | "hint" | "undo" | "restart" | "leave" | "correct" | "incorrect" | "challengeFail" | "complete" | "record" | "gameOverWin" | "gameOverLose" | "gameOverDraw" | "forbidden" | "lessonWin" | "lessonLose" | null
+type Modal = "signup" | "forgot" | "logout" | "setup" | "hint" | "undo" | "restart" | "leave" | "correct" | "incorrect" | "challengeFail" | "complete" | "record" | "gameOverWin" | "gameOverLose" | "gameOverDraw" | "forbidden" | "lessonWin" | "lessonLose" | "stage1Win" | "stage2Win" | null
 
 const copy = {
   zh: {
@@ -236,6 +238,11 @@ const copy = {
     lessonFailBody: "你睇，如果唔擋住對手嘅活三，佢下一步就會連成四粒，再下一步就贏喇！",
     lessonFailVoice: "哎呀，你睇，如果唔擋住對手嘅活三，佢下一步就會贏啦！",
     nextLevel: "下一關",
+    stage1WinTitle: "Wow！",
+    stage1WinBody: "嘩，而家你知道我哋棋盤同棋子嘅基本知識喇。你亦都已經揀咗你最鍾意嘅主題。唔錯^^",
+    stage2WinTitle: "恭喜！",
+    stage2WinBody: "哦，你啱啱贏咗。而家你知道咗 Gomoku 嘅基本贏法，即係將五個棋子連結起嚟。做得好！！",
+    stage2WinVoice: "哦，你啱啱贏咗。而家你知道咗 Gomoku 嘅基本贏法，即係將五個棋子連結起嚟。做得好！！",
   },
   en: {
     brand: "Gomoku Joy",
@@ -450,6 +457,11 @@ const copy = {
     lessonFailBody: "See? If you don't block an open three, they will make a four and then win!",
     lessonFailVoice: "Oh no, see? If you don't block the open three, they will win!",
     nextLevel: "Next Level",
+    stage1WinTitle: "Wow!",
+    stage1WinBody: "Now you know the basic knowledge of our board and pieces and chose your favourite theme. Nice!",
+    stage2WinTitle: "Congrats!!",
+    stage2WinBody: "Oh, you have win just now. Now you know the basic winning rule of Gomoku, which is linking five pieces. Well done!!",
+    stage2WinVoice: "Oh, you have win just now. Now you know the basic winning rule of Gomoku, which is linking five pieces. Well done!!",
   },
 } as const
 
@@ -477,6 +489,8 @@ const iconPaths: Record<string, React.ReactNode> = {
   menu: <path d="M5 7h14M5 12h14M5 17h14" />,
   logout: (<><path d="M10 5H5v14h5M14 8l4 4-4 4M9 12h9" /></>),
   mute: <path d="M5 10v4h3l4 4V6L8 10zM16 9l4 4M20 9l-4 4" />,
+  fullscreen: (<><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" /></>),
+  exitFullscreen: (<><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" /></>),
 }
 
 type IconProps = { name: string; size?: number }
@@ -539,12 +553,24 @@ function App() {
   const [gameWinner, setGameWinner] = useState<Player | null>(null)
   const [gameKey, setGameKey] = useState(0)
   const [lessonKey, setLessonKey] = useState(0)
+  const [lessonId, setLessonId] = useState(0)
   const t = copy[lang]
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
+    document.documentElement.style.colorScheme = theme
     sessionStorage.setItem("gomoku-theme", theme)
     sessionStorage.setItem("gomoku-lang", lang)
+    
+    if (theme === "light") {
+      document.body.classList.add("light-mode");
+      document.documentElement.style.setProperty("--force-bg", "#f8f5ef");
+      document.documentElement.style.setProperty("--force-text", "#22211f");
+    } else {
+      document.body.classList.remove("light-mode");
+      document.documentElement.style.setProperty("--force-bg", "#171918");
+      document.documentElement.style.setProperty("--force-text", "#f5f2ec");
+    }
   }, [theme, lang])
 
   useEffect(() => {
@@ -592,26 +618,67 @@ function App() {
       ) : (
         <>
           <Header page={page} lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} navigate={navigate} openModal={setModal} openSetup={openSetup} />
-          <main>
-            {page === "home" && <Home lang={lang} navigate={navigate} openSetup={openSetup} openModal={setModal} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled} />}
-            {page === "lessons" && <Lessons lang={lang} navigate={navigate} />}
-                        {page === "lesson" && (
-              <Lesson 
-                key={lessonKey}
+                    <main>
+            {page === "home" && (
+              <Home 
                 lang={lang} 
                 navigate={navigate} 
-                moves={lessonMoves} 
-                setMoves={setLessonMoves} 
-                audioPlaying={audioPlaying} 
-                setAudioPlaying={setAudioPlaying} 
+                openSetup={openSetup} 
                 openModal={setModal} 
-                restartLesson={() => {
-                  setLessonKey(k => k + 1);
-                  setModal(null);
-                }}
+                soundEnabled={soundEnabled} 
+                setSoundEnabled={setSoundEnabled} 
               />
             )}
-            {page === "challenge" && <Challenge lang={lang} navigate={navigate} openModal={setModal} />}
+
+            {page === "lessons" && (
+              <Lessons 
+                lang={lang} 
+                navigate={navigate} 
+                setLessonId={setLessonId} 
+              />
+            )}
+
+            {page === "lesson" && (
+              lessonId === 0 ? (
+                <Stage1 
+                  lang={lang} 
+                  navigate={navigate} 
+                  boardStyle={boardStyle} 
+                  setBoardStyle={setBoardStyle} 
+                  openModal={setModal} 
+                />
+              ) : lessonId === 1 ? (
+                <Stage2 
+                  lang={lang} 
+                  navigate={navigate} 
+                  openModal={setModal} 
+                />
+              ) : (
+                <Stage3 
+                  key={lessonKey}
+                  lang={lang} 
+                  navigate={navigate} 
+                  moves={lessonMoves} 
+                  setMoves={setLessonMoves} 
+                  audioPlaying={audioPlaying} 
+                  setAudioPlaying={setAudioPlaying} 
+                  openModal={setModal} 
+                  restartLesson={() => {
+                    setLessonKey(k => k + 1);
+                    setModal(null);
+                  }}
+                />
+              )
+            )}
+
+            {page === "challenge" && (
+              <Challenge 
+                lang={lang} 
+                navigate={navigate} 
+                openModal={setModal} 
+              />
+            )}
+
             {page === "game" && (
               <Game
                 key={gameKey}
@@ -631,9 +698,36 @@ function App() {
                 }}
               />
             )}
-            {page === "leaderboard" && <Leaderboard lang={lang} navigate={navigate} />}
-            {page === "profile" && <Profile lang={lang} openModal={setModal} navigate={navigate} />}
-            {page === "settings" && <Settings lang={lang} theme={theme} setLang={setLang} setTheme={setTheme} boardStyle={boardStyle} setBoardStyle={setBoardStyle} navigate={navigate} saved={() => setToast(t.saved)} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled} />}
+
+            {page === "leaderboard" && (
+              <Leaderboard 
+                lang={lang} 
+                navigate={navigate} 
+              />
+            )}
+
+            {page === "profile" && (
+              <Profile 
+                lang={lang} 
+                openModal={setModal} 
+                navigate={navigate} 
+              />
+            )}
+
+            {page === "settings" && (
+              <Settings 
+                lang={lang} 
+                theme={theme} 
+                setLang={setLang} 
+                setTheme={setTheme} 
+                boardStyle={boardStyle} 
+                setBoardStyle={setBoardStyle} 
+                navigate={navigate} 
+                saved={() => setToast(t.saved)} 
+                soundEnabled={soundEnabled} 
+                setSoundEnabled={setSoundEnabled} 
+              />
+            )}
           </main>
           <MobileNav page={page} lang={lang} navigate={navigate} openSetup={openSetup} />
         </>
@@ -651,6 +745,7 @@ function App() {
           hintsEnabled={hintsEnabled} setHintsEnabled={setHintsEnabled}
           soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}
           gameWinner={gameWinner}
+          setLessonId={setLessonId}
         />
       )}
       {toast && <div className="toast" role="status"><span className="toast-check"><Icon name="check" size={16} /></span>{toast}</div>}
@@ -866,11 +961,15 @@ function Home({ lang, navigate, openSetup, openModal, soundEnabled, setSoundEnab
 }
 
 const lessonData = {
-  zh: ["棋盤與棋子", "基本規則", "連五獲勝", "活三", "沖四", "阻擋對手", "簡單陷阱", "棋局挑戰"],
-  en: ["The Board and Stones", "Basic Rules", "Winning with Five in a Row", "Open Three", "Rush Four", "Blocking the Opponent", "Simple Traps", "Board Challenges"],
+  zh: ["棋盤與棋子", "基本規則", "活三", "沖四", "阻擋對手", "簡單陷阱", "棋局挑戰"],
+  en: ["The Board and Stones", "Basic Rules", "Open Three", "Rush Four", "Blocking the Opponent", "Simple Traps", "Board Challenges"],
 }
 
-function Lessons({ lang, navigate }: { lang: Lang; navigate: (p: Page) => void }) {
+function Lessons({ lang, navigate, setLessonId }: { 
+  lang: Lang; 
+  navigate: (p: Page) => void; 
+  setLessonId: (id: number) => void;
+}) {
   const t = copy[lang]
   return (
     <div>
@@ -887,7 +986,15 @@ function Lessons({ lang, navigate }: { lang: Lang; navigate: (p: Page) => void }
           {lessonData[lang].map((name, i) => {
             const status = i < 3 ? "done" : i === 3 ? "current" : "locked"
             return (
-              <button className={`lesson-row ${status}`} key={name} onClick={() => status !== "locked" && navigate(i === 7 ? "challenge" : "lesson")}>
+              <button 
+                className={`lesson-row ${status}`} 
+                key={name} 
+                onClick={() => {
+                  if (status === "locked") return;
+                  setLessonId(i); // 👈 根據點擊嘅 index 設定 lessonId
+                  navigate("lesson");
+                }}
+              >
                 <span className="lesson-number">{status === "done" ? <Icon name="check" /> : i + 1}</span>
                 <span className="lesson-copy"><small>{lang === "zh" ? `第 ${i + 1} 課` : `LESSON ${i + 1}`}</small><b>{name}</b></span>
                 <span className={`status-pill ${status}`}>{status === "done" ? t.completed : status === "current" ? t.inProgress : t.notStarted}</span>
@@ -901,7 +1008,203 @@ function Lessons({ lang, navigate }: { lang: Lang; navigate: (p: Page) => void }
   )
 }
 
-function Lesson(props: {
+function Stage1(props: { 
+  lang: Lang; 
+  navigate: (p: Page) => void; 
+  boardStyle: string; 
+  setBoardStyle: (s: string) => void;
+  openModal: (m: Modal) => void;
+}) {
+  const t = copy[props.lang]
+  
+  // 建立一個預設棋盤，放一黑一白喺交叉點
+  const demoBoard = useMemo(() => {
+    const b = createBoard()
+    b[5][5] = 1 // 黑棋
+    b[9][9] = 2 // 白棋
+    return b
+  }, [])
+
+  return (
+    <div>
+      <div className="lesson-topbar">
+        <button className="back-link" onClick={() => props.navigate("lessons")}><Icon name="back" />{t.backLessons}</button>
+        <div className="step-bar">
+          <span><i style={{ width: "15%" }} /></span>
+          <b>{props.lang === "zh" ? "步驟 1 / 7" : "Step 1 / 7"}</b>
+        </div>
+        <button className="text-link danger" onClick={() => props.navigate("lessons")}>{t.exit}</button>
+      </div>
+      <div className="game-layout">
+        <section className="board-area">
+          <div className="board-heading">
+            <div>
+              <span className="eyebrow accent">{props.lang === "zh" ? "第 1 課" : "Lesson 1"}</span>
+              <h1>{props.lang === "zh" ? "棋盤與棋子" : "Board and Pieces"}</h1>
+            </div>
+          </div>
+          
+          <div className="board-shell" style={{ position: "relative" }}>
+            {/* 👇 用 customHighlight 釘死個圈同字喺中間 */}
+            <GomokuBoard 
+              board={demoBoard} 
+              style={props.boardStyle} 
+              customHighlight={{ 
+                index: 112, 
+                text: props.lang === "zh" ? "棋盤交叉點" : "Intersection" 
+              }} 
+            />
+            
+            {/* 箭嘴指住黑棋 (5,5 嘅位置) */}
+            <div style={{ position: "absolute", top: "36.6%", left: "20%", zIndex: 10, display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ background: "var(--accent)", color: "white", padding: "4px 8px", borderRadius: 8, fontWeight: "bold", fontSize: 12 }}>
+                {props.lang === "zh" ? "棋子" : "Piece"}
+              </span>
+              <div style={{ width: 40, height: 2, background: "var(--accent)", position: "relative" }}>
+                <div style={{ position: "absolute", right: -5, top: -4, width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "6px solid var(--accent)" }} />
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <aside className="lesson-panel">
+          <div className="lesson-panel-top">
+            <span className="mode-icon learn-icon"><Icon name="book" /></span>
+            <div>
+              <small>{props.lang === "zh" ? "第 1 課" : "Lesson 1"}</small>
+              <h2>{props.lang === "zh" ? "棋盤與棋子" : "Board and Pieces"}</h2>
+            </div>
+          </div>
+          <p className="lesson-explain">
+            {props.lang === "zh" 
+              ? "五子棋係喺棋盤線上嘅交叉點落子。棋盤係 15×15，棋子分為黑棋同白棋，黑棋先行。你可以喺下面揀一個你鍾意嘅棋盤風格！" 
+              : "Gomoku is played on the intersections of the board lines. The board is 15x15, with black and white pieces, and black goes first. Choose your favourite board theme below!"}
+          </p>
+
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <b style={{ fontSize: 14, display: "block", marginBottom: 10 }}>
+              {props.lang === "zh" ? "選擇棋盤風格：" : "Choose Board Theme:"}
+            </b>
+            <div className="board-options">
+              {[["wood", props.lang === "zh" ? "原木" : "Wood"], ["classic", props.lang === "zh" ? "經典" : "Classic"], ["minimal", props.lang === "zh" ? "簡約" : "Minimalist"], ["neon", props.lang === "zh" ? "冰火" : "Neon"]].map(([id, label]) => (
+                <button className={props.boardStyle === id ? "active" : ""} onClick={() => props.setBoardStyle(id)} key={id}>
+                  <span className={`board-preview ${id}`} />
+                  {label}
+                  <i>{props.boardStyle === id && <Icon name="check" size={13} />}</i>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button className="button button-primary button-full" style={{ marginTop: "auto" }} onClick={() => {
+            // 修正語音文字，確保一定有把聲
+            const voiceText = props.lang === "zh" 
+              ? "嘩，而家你知道我哋棋盤同棋子嘅基本知識喇。你亦都已經揀咗你最鍾意嘅主題。唔錯！" 
+              : "Wow, now you know the basic knowledge of our board and pieces and choose your favourite theme. Nice!";
+            speak(voiceText, true);
+            props.openModal("stage1Win");
+          }}>
+            {props.lang === "zh" ? "完成本關卡" : "Complete Stage"} <Icon name="check" />
+          </button>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+function Stage2(props: { 
+  lang: Lang; 
+  navigate: (p: Page) => void; 
+  openModal: (m: Modal) => void 
+}) {
+  const t = copy[props.lang]
+  
+    const [board, setBoard] = useState<Board>(() => {
+    const b = createBoard()
+    
+    // 黑棋 6 粒：四連 (7,4) 至 (7,7)，加兩粒散落嘅
+    b[7][4] = 1; b[7][5] = 1; b[7][6] = 1; b[7][7] = 1;
+    b[6][6] = 1; b[8][6] = 1;
+    
+    // 白棋 6 粒：一粒封死左邊 (7,3)，加五粒散落嘅
+    b[7][3] = 2;
+    b[5][5] = 2; b[6][8] = 2; b[8][8] = 2; b[9][7] = 2; b[5][7] = 2;
+
+    return b
+  })
+
+  // 入到去等 2 秒播提示
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      speak(
+        props.lang === "zh" 
+          ? "黑棋已經有四連，試吓喺右邊落一粒黑棋，連成五粒一線贏出啦！" 
+          : "Black already has four in a row. Try placing a black piece on the right to link five and win!",
+        true
+      );
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [props.lang])
+
+  const place = (index: number) => {
+    const [r, c] = indexToCoord(index)
+    if (board[r][c] !== 0) return
+    
+    // 正確答案係落喺 (7,8) 形成五連
+    if (r === 7 && c === 8) {
+      const newBoard = cloneBoard(board)
+      newBoard[r][c] = 1
+      setBoard(newBoard)
+      
+      speak(t.stage2WinVoice, true)
+      props.openModal("stage2Win")
+    } else {
+      speak(props.lang === "zh" ? "試吓喺黑棋最右邊落一粒棋子啦！" : "Try placing a piece to the right of the black pieces!")
+    }
+  }
+
+  return (
+    <div>
+      <div className="lesson-topbar">
+        <button className="back-link" onClick={() => props.navigate("lessons")}><Icon name="back" />{t.backLessons}</button>
+        <div className="step-bar">
+          <span><i style={{ width: "30%" }} /></span>
+          <b>{props.lang === "zh" ? "步驟 2 / 7" : "Step 2 / 7"}</b>
+        </div>
+        <button className="text-link danger" onClick={() => props.navigate("lessons")}>{t.exit}</button>
+      </div>
+      <div className="game-layout">
+        <section className="board-area">
+          <div className="board-heading">
+            <div>
+              <span className="eyebrow accent">{props.lang === "zh" ? "第 2 課" : "Lesson 2"}</span>
+              <h1>{props.lang === "zh" ? "基本規則" : "Basic Rules"}</h1>
+            </div>
+          </div>
+          <div className="board-shell">
+            <GomokuBoard board={board} onMove={place} />
+          </div>
+        </section>
+        <aside className="lesson-panel">
+          <div className="lesson-panel-top">
+            <span className="mode-icon learn-icon"><Icon name="book" /></span>
+            <div>
+              <small>{props.lang === "zh" ? "第 2 課" : "Lesson 2"}</small>
+              <h2>{props.lang === "zh" ? "基本規則" : "Basic Rules"}</h2>
+            </div>
+          </div>
+          <p className="lesson-explain">
+            {props.lang === "zh" 
+              ? "黑棋已經有四連，但左邊被白棋封死了。試吓喺棋盤上落一粒黑棋，令到黑棋連成五粒一線！" 
+              : "Black has four in a row, but the left side is blocked. Try placing a black piece to link five in a row!"}
+          </p>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+function Stage3(props: {
   lang: Lang
   navigate: (p: Page) => void
   moves: number[]
@@ -1051,8 +1354,8 @@ function PageIntro({ eyebrow, title, body, back, onBack, children }: { eyebrow: 
   )
 }
 
-function GomokuBoard({ board, onMove, highlight, lastMove, hintMove, currentPlayer, style = "wood" }: { 
-  board: Board; onMove?: (i: number) => void; highlight?: number; lastMove?: number; hintMove?: number | null; currentPlayer?: Player; style?: string; 
+function GomokuBoard({ board, onMove, highlight, lastMove, hintMove, currentPlayer, style = "wood", customHighlight, threatPositions = [] }: { 
+  board: Board; onMove?: (i: number) => void; highlight?: number; lastMove?: number; hintMove?: number | null; currentPlayer?: Player; style?: string; customHighlight?: { index: number, text: string }; threatPositions?: number[];
 }) {
   return (
     <div className={`gomoku-board ${style}`} role="grid" aria-label="15 by 15 Gomoku board">
@@ -1061,6 +1364,7 @@ function GomokuBoard({ board, onMove, highlight, lastMove, hintMove, currentPlay
         const col = i % BOARD_SIZE
         const cell = board[row][col]
         const stone = cell === 1 ? "black" : cell === 2 ? "white" : ""
+        
         return (
           <button
             key={i}
@@ -1071,6 +1375,45 @@ function GomokuBoard({ board, onMove, highlight, lastMove, hintMove, currentPlay
             {stone && <i>{lastMove === i ? <b /> : null}</i>}
             {!stone && hintMove === i && (
               <span className={`hint-stone ${currentPlayer === 1 ? "black" : "white"}`} />
+            )}
+
+            {/* 👇 畫出活三嘅威脅圈 */}
+            {!stone && threatPositions.includes(i) && (
+              <span className="threat-circle" />
+            )}
+            
+            {/* 👇 自訂交叉點標記：用圓圈完美包住成個交叉點 */}
+            {customHighlight?.index === i && (
+              <>
+                {/* 畫一個完美置中嘅圓圈 */}
+                <div style={{
+                  position: "absolute",
+                  top: 0, left: 0, right: 0, bottom: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  pointerEvents: "none", zIndex: 20
+                }}>
+                  <div style={{ width: "70%", height: "70%", borderRadius: "50%", border: "2.5px solid var(--accent)" }} />
+                </div>
+                
+                {/* 將箭嘴同文字移去圓圈右邊 */}
+                <div style={{ 
+                  position: "absolute", 
+                  top: "50%", 
+                  left: "calc(100% + 5px)", // 放喺格仔右邊
+                  transform: "translateY(-50%)", 
+                  zIndex: 20, 
+                  display: "flex", 
+                  alignItems: "center", 
+                  pointerEvents: "none" 
+                }}>
+                  <div style={{ width: 30, height: 2, background: "var(--accent)", position: "relative" }}>
+                    <div style={{ position: "absolute", right: -5, top: -4, width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "6px solid var(--accent)" }} />
+                  </div>
+                  <span style={{ background: "var(--accent)", color: "white", padding: "4px 8px", borderRadius: 8, fontWeight: "bold", fontSize: 12, whiteSpace: "nowrap", marginLeft: 4, boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
+                    {customHighlight.text}
+                  </span>
+                </div>
+              </>
             )}
           </button>
         )
@@ -1143,8 +1486,35 @@ function Game(props: {
   const [hintMove, setHintMove] = useState<number | null>(null)
   const [hintSuggestion, setHintSuggestion] = useState<string | null>(null)
   const [warningMsg, setWarningMsg] = useState<string | null>(null)
-
   const isAITurn = !isLocal && currentPlayer === aiColor && status === "playing"
+  const gameRef = useRef<HTMLDivElement>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [evalScores, setEvalScores] = useState({ black: 0, white: 0 })
+  const [threatPositions, setThreatPositions] = useState<number[]>([])
+
+    useEffect(() => {
+    // 每次棋盤一變，即刻計分
+    setEvalScores(getEvaluationScores(board))
+  }, [board])
+
+    // 加一個 useEffect 監聽瀏覽器嘅全螢幕狀態變化
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange)
+  }, [])
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      gameRef.current?.requestFullscreen().catch(err => {
+        console.log(`Error attempting to enable full-screen mode: ${err.message}`)
+      })
+    } else {
+      document.exitFullscreen()
+    }
+  }
 
   useEffect(() => {
     if (props.setupType !== "ai" || props.timer === "unlimited" || status !== "playing") return
@@ -1173,11 +1543,11 @@ function Game(props: {
   }, [isAITurn, board])
 
   const place = (index: number) => {
-    if (status !== "playing") return
-    const [row, col] = indexToCoord(index)
-    if (board[row][col] !== 0) return
+  if (status !== "playing") return
+  const [row, col] = indexToCoord(index)
+  if (board[row][col] !== 0) return
 
-    setHintMove(null); setHintSuggestion(null); setWarningMsg(null)
+  setHintMove(null); setHintSuggestion(null); setWarningMsg(null); setThreatPositions([])
 
     const newBoard = cloneBoard(board)
     newBoard[row][col] = currentPlayer
@@ -1216,9 +1586,12 @@ function Game(props: {
 
     setBoard(newBoard); setMoveHistory((m) => [...m, index]); setLastMove(index); setCurrentPlayer(currentPlayer === 1 ? 2 : 1)
 
-    if (props.setupType === "ai" && props.difficulty === "Easy" && props.hintsEnabled) {
-      if (checkThreat(newBoard, aiColor)) {
+        if (props.setupType === "ai" && props.hintsEnabled) {
+      // 用 AI 顏色搵「AI 可以形成活三/沖四嘅位」= 玩家要擋嘅位
+      const threats = findThreatPositions(newBoard, aiColor)
+      if (threats.length > 0) {
         setWarningMsg(t.warningOpenThree)
+        setThreatPositions(threats)
         if (props.soundEnabled) speak(t.warningOpenThree)
       }
     }
@@ -1269,12 +1642,7 @@ function Game(props: {
           : currentPlayer === playerColor ? t.turn : `${t.ai} · ${t.white}`
 
   return (
-    <div className={`board-theme-${props.boardStyle}`}>
-      <div className="game-statusbar">
-        <div><span className={`live-dot ${props.renju ? "renju-dot" : ""}`} />{t.gameStatus}</div>
-        <span>{props.renju ? t.renjuTitle : t.freeTitle}</span>
-        <button className="text-link danger" onClick={() => props.openModal("leave")}><Icon name="flag" size={17} />{t.backHome}</button>
-      </div>
+    <div ref={gameRef} className={`game-page active-game board-theme-${props.boardStyle}`}>
       <div className="game-layout">
         <section className="board-area">
           <div className="board-heading game-heading">
@@ -1282,22 +1650,33 @@ function Game(props: {
               <span className={`mode-badge ${props.renju ? "renju" : ""}`}>{props.renju ? t.renju : "Gomoku"}</span>
               <h1>{turnLabel}</h1>
             </div>
+            
+            {/* 👇 保留原本嘅 Timer */}
             {props.timer !== "unlimited" && props.setupType === "ai" && status === "playing" && (
               <div className={`board-timer ${timeLeft <= 5 ? "timer-danger" : ""}`}>
                 <span>{t.timer}</span>
                 <b>{String(Math.floor(timeLeft / 60)).padStart(2, "0")}:{String(timeLeft % 60).padStart(2, "0")}</b>
               </div>
             )}
+
+            {/* 👇 喺 turn-legend 入面加全螢幕掣 */}
             <div className="turn-legend">
               <span><i className="legend-stone black" />{t.black} · {t.you}</span>
               <span><i className="legend-stone white" />{t.white} · {t.ai}</span>
+              
+              <button className="text-link" onClick={toggleFullScreen} style={{ marginLeft: 10 }}>
+                <Icon name={isFullscreen ? "exitFullscreen" : "fullscreen"} size={16} /> 
+                {isFullscreen 
+                  ? (props.lang === "zh" ? "退出全螢幕" : "Exit Full Screen") 
+                  : (props.lang === "zh" ? "全螢幕" : "Full Screen")}
+              </button>
             </div>
           </div>
           {props.renju && <div className="forbidden-banner"><Icon name="flag" size={17} /><b>{t.forbiddenNote}</b><span>三三 · 四四 · 長連</span></div>}
           {status === "forbidden" && <div className="forbidden-banner" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}><Icon name="flag" size={17} /><b>{forbiddenMsg === "double-three" ? "三三禁手！" : forbiddenMsg === "double-four" ? "四四禁手！" : "長連禁手！"}</b></div>}
           
           <div className="board-shell">
-            <GomokuBoard board={board} onMove={(i) => { setHintMove(null); setHintSuggestion(null); setWarningMsg(null); place(i) }} style={props.boardStyle} lastMove={lastMove ?? undefined} hintMove={hintMove} currentPlayer={currentPlayer} />
+            <GomokuBoard board={board} onMove={(i) => { setHintMove(null); setHintSuggestion(null); setWarningMsg(null); place(i) }} style={props.boardStyle} lastMove={lastMove ?? undefined} hintMove={hintMove} currentPlayer={currentPlayer} threatPositions={threatPositions} />
           </div>
           {isAiThinking && <div style={{ textAlign: "center", marginTop: "10px", color: "var(--muted)", fontSize: "12px" }}>{props.lang === "zh" ? "阿棋思考緊..." : "Ah Kei is thinking..."}</div>}
         </section>
@@ -1316,10 +1695,41 @@ function Game(props: {
             <div><span>{t.difficulty}</span><b>{props.difficulty}</b></div>
             <div><span>{t.timer}</span><b>{props.timer === "unlimited" ? t.unlimited : props.timer}</b></div>
           </div>
+
           <div className="history">
             <div className="panel-title"><h3>{t.moveHistory}</h3><span>{moveHistory.length} {t.moves}</span></div>
             <div className="move-grid">
               {moveHistory.map((m, i) => { const [r, c] = indexToCoord(m); return <span key={`${m}-${i}`}><small>{i + 1}</small><i className={i % 2 ? "white" : "black"} />{coordToLabel(r, c)}</span> })}
+            </div>
+          </div>
+
+                    {/* 👇 勝率形勢 */}
+          <div className="history">
+            <div className="panel-title">
+              <h3>{props.lang === "zh" ? "勝率形勢" : "Win Rate"}</h3>
+            </div>
+            <div style={{ padding: "10px 0" }}>
+              {(() => {
+                const total = evalScores.black + evalScores.white
+                const blackPct = total === 0 ? 50 : Math.round((evalScores.black / total) * 100)
+                const clampedPct = Math.max(5, Math.min(95, blackPct))
+                return (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
+                      <span>{props.lang === "zh" ? "黑棋 (你)" : "Black (You)"}</span>
+                      <b>{blackPct}%</b>
+                    </div>
+                    <div style={{ width: "100%", height: 8, background: "var(--surface-3)", borderRadius: 4, overflow: "hidden", display: "flex" }}>
+                      <div style={{ width: `${clampedPct}%`, background: "#171717" }} />
+                      <div style={{ flex: 1, background: "white", border: "1px solid #aaa" }} />
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 6, color: "var(--muted)" }}>
+                      <span>{props.lang === "zh" ? "黑棋分數" : "Black Score"}: {evalScores.black}</span>
+                      <span>{props.lang === "zh" ? "白棋分數" : "White Score"}: {evalScores.white}</span>
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           </div>
           
@@ -1500,6 +1910,7 @@ function ModalLayer(props: {
   soundEnabled: boolean
   setSoundEnabled: (v: boolean) => void
   gameWinner: Player | null
+  setLessonId: React.Dispatch<React.SetStateAction<number>>
 }) {
   const t = copy[props.lang]
   const [sent, setSent] = useState(false)
@@ -1509,13 +1920,13 @@ function ModalLayer(props: {
     logout: t.logoutTitle, hint: t.hintTitle, undo: t.undoTitle, restart: t.restartTitle,
     leave: t.leaveTitle, correct: t.correctTitle, incorrect: t.incorrectTitle, challengeFail: t.challengeFailTitle, complete: t.finishTitle,
     record: t.recordTitle, gameOverWin: t.gameOverWinTitle, gameOverLose: t.gameOverLoseTitle, gameOverDraw: t.gameOverDrawTitle,
-    forbidden: t.forbiddenTitle, lessonWin: t.lessonCorrectTitle, lessonLose: t.lessonFailTitle,
+    forbidden: t.forbiddenTitle, lessonWin: t.lessonCorrectTitle, lessonLose: t.lessonFailTitle, stage1Win: t.stage1WinTitle, stage2Win: t.stage2WinTitle,
   }
   const bodyMap: Partial<Record<Exclude<Modal, null>, string>> = {
     logout: t.logoutBody, hint: t.hintBody, undo: t.undoBody, restart: t.restartBody,
     leave: t.leaveBody, correct: t.correctBody, incorrect: t.incorrectBody, challengeFail: t.challengeFailBody, complete: t.finishBody,
     gameOverWin: t.gameOverWinBody, gameOverLose: t.gameOverLoseBody, gameOverDraw: t.gameOverDrawBody,
-    forbidden: t.forbiddenBody, lessonWin: t.lessonCorrectBody, lessonLose: t.lessonFailBody,
+    forbidden: t.forbiddenBody, lessonWin: t.lessonCorrectBody, lessonLose: t.lessonFailBody, stage1Win: t.stage1WinBody, stage2Win: t.stage2WinBody,
   }
   let finalTitle = titleMap[props.modal]
   let finalBody = bodyMap[props.modal]
@@ -1611,11 +2022,16 @@ function ModalLayer(props: {
         <button className="button button-ghost" onClick={() => props.navigate("lessons")}>
           {t.backLessons}
         </button>
-        <button className="button button-primary" onClick={() => props.navigate("challenge")}>
+        <button className="button button-primary" onClick={() => {
+          props.close();
+          props.setLessonId(prev => prev + 1);
+          props.navigate("lesson");
+        }}>
           {t.nextLevel}
         </button>
       </>
     ),
+
     lessonLose: (
       <>
         <button className="button button-ghost" onClick={() => props.restartLesson()}>
@@ -1624,7 +2040,42 @@ function ModalLayer(props: {
         <button className="button button-ghost" onClick={() => props.navigate("lessons")}>
           {t.backLessons}
         </button>
-        <button className="button button-primary" onClick={() => props.navigate("challenge")}>
+        {/* 輸咗都可以畀佢挑戰下一關，或者你鍾意刪咗佢都得 */}
+        <button className="button button-primary" onClick={() => {
+          props.close();
+          props.setLessonId(prev => prev + 1);
+          props.navigate("lesson");
+        }}>
+          {t.nextLevel}
+        </button>
+      </>
+    ),
+
+    stage1Win: (
+      <>
+        <button className="button button-ghost" onClick={() => props.navigate("lessons")}>
+          {t.backLessons}
+        </button>
+        <button className="button button-primary" onClick={() => { 
+          props.close(); 
+          props.setLessonId(prev => prev + 1); 
+          props.navigate("lesson");
+        }}>
+          {t.nextLevel}
+        </button>
+      </>
+    ),
+
+    stage2Win: (
+      <>
+        <button className="button button-ghost" onClick={() => props.navigate("lessons")}>
+          {t.backLessons}
+        </button>
+        <button className="button button-primary" onClick={() => { 
+          props.close(); 
+          props.setLessonId(prev => prev + 1); 
+          props.navigate("lesson");
+        }}>
           {t.nextLevel}
         </button>
       </>

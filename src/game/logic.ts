@@ -406,4 +406,83 @@ export function checkThreat(board: Board, targetPlayer: Player): boolean {
     }
   }
   return false;
+} // 👈 加返呢個大括號閂返個 Function
+
+// 👇 分開計每個玩家自己嘅 pattern 分（唔好互相扣減）
+function evaluateForPlayer(board: Board, player: Player): number {
+  let score = 0
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] !== player) continue
+      for (const [dx, dy] of DIRECTIONS) {
+        const prevR = r - dx, prevC = c - dy
+        if (
+          prevR >= 0 && prevR < BOARD_SIZE &&
+          prevC >= 0 && prevC < BOARD_SIZE &&
+          board[prevR][prevC] === player
+        ) continue
+        score += scoreLine(board, r, c, player, dx, dy)
+      }
+    }
+  }
+  return score
+}
+
+// 👇 計算雙方形勢分數（用於勝率評估）
+export function getEvaluationScores(board: Board): { black: number, white: number } {
+  return {
+    black: evaluateForPlayer(board, 1),
+    white: evaluateForPlayer(board, 2),
+  }
+}
+
+// 👇 搵出棋盤上所有形成「活三」或「沖四」嘅關鍵位置（用於 Hint 提示）
+export function findThreatPositions(board: Board, player: Player): number[] {
+  const positions: number[] = []
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] !== 0) continue
+
+      const temp = cloneBoard(board)
+      temp[r][c] = player
+
+      let isThreat = false
+      for (const [dx, dy] of DIRECTIONS) {
+        const len = getLineLength(temp, r, c, player, dx, dy)
+        if (len !== 3 && len !== 4) continue
+
+        // 搵線頭線尾（落子位置左右兩邊各延伸）
+        let left = 0, right = 0
+        while (
+          r - dx * (left + 1) >= 0 && r - dx * (left + 1) < BOARD_SIZE &&
+          c - dy * (left + 1) >= 0 && c - dy * (left + 1) < BOARD_SIZE &&
+          temp[r - dx * (left + 1)][c - dy * (left + 1)] === player
+        ) left++
+        while (
+          r + dx * (right + 1) >= 0 && r + dx * (right + 1) < BOARD_SIZE &&
+          c + dy * (right + 1) >= 0 && c + dy * (right + 1) < BOARD_SIZE &&
+          temp[r + dx * (right + 1)][c + dy * (right + 1)] === player
+        ) right++
+
+        const frontR = r - dx * (left + 1), frontC = c - dy * (left + 1)
+        const backR = r + dx * (right + 1), backC = c + dy * (right + 1)
+        const frontOpen =
+          frontR >= 0 && frontR < BOARD_SIZE &&
+          frontC >= 0 && frontC < BOARD_SIZE &&
+          temp[frontR][frontC] === 0
+        const backOpen =
+          backR >= 0 && backR < BOARD_SIZE &&
+          backC >= 0 && backC < BOARD_SIZE &&
+          temp[backR][backC] === 0
+
+        // 沖四：至少一邊開放（下一步可以連五）
+        if (len === 4 && (frontOpen || backOpen)) { isThreat = true; break }
+        // 活三：兩邊都要開放
+        if (len === 3 && frontOpen && backOpen) { isThreat = true; break }
+      }
+
+      if (isThreat) positions.push(r * BOARD_SIZE + c)
+    }
+  }
+  return positions
 }

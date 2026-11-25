@@ -529,3 +529,116 @@ h1, h2, h3 { letter-spacing: -.035em; }
 :root[data-theme="dark"] .hint-display.warning span {
   color: #ff8a8a !important; /* 強制文字變淺紅 */
 }
+
+/* 👇 全螢幕模式：強制控制背景色 */
+:fullscreen,
+:fullscreen body,
+:fullscreen html {
+  background-color: var(--force-bg) !important;
+  color: var(--force-text) !important;
+  margin: 0;
+  padding: 0;
+}
+
+:fullscreen .game-page {
+  background-color: var(--force-bg) !important;
+  color: var(--force-text) !important;
+  padding: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 隱藏 Header 同 Statusbar */
+:fullscreen .game-page .site-header,
+:fullscreen .game-page .game-statusbar {
+  display: none !important; 
+}
+
+:fullscreen .game-page .game-layout {
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  min-height: 100vh;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+}
+
+:fullscreen .game-page .board-area {
+  padding: 20px 40px;
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100vh;
+  background-color: var(--force-bg) !important;
+}
+
+:fullscreen .game-page .board-heading h1 {
+  color: var(--force-text) !important;
+}
+
+:fullscreen .game-page .board-heading {
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+:fullscreen .game-page .board-shell {
+  width: min(85vh, 100%);
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+
+:fullscreen .game-page .game-panel {
+  padding: 40px 30px;
+  height: 100vh;
+  overflow-y: auto;
+  background-color: var(--force-bg) !important;
+}
+
+/* 強制側邊欄所有文字變色 */
+:fullscreen .game-page .game-panel h3,
+:fullscreen .game-page .game-panel b,
+:fullscreen .game-page .game-panel .player b,
+:fullscreen .game-page .game-panel .player small,
+:fullscreen .game-page .game-panel .panel-title span,
+:fullscreen .game-page .game-panel .detail-list span {
+  color: var(--force-text) !important;
+}
+
+/* 掣嘅外觀調整 */
+:fullscreen .game-page .button-secondary {
+  background: var(--surface-2) !important;
+  color: var(--force-text) !important;
+  border-color: var(--line) !important;
+}
+:fullscreen .game-page .button-ghost {
+  color: var(--force-text) !important;
+  border-color: var(--line) !important;
+}
+:fullscreen .game-page .text-avatar {
+  background: var(--surface-3) !important;
+  color: var(--force-text) !important;
+}
+
+/* 👇 活三威脅提示圈 (70% 透明度) */
+.threat-circle {
+  position: absolute;
+  width: 85%;
+  height: 85%;
+  border-radius: 50%;
+  border: 3px solid #ff8a8a; /* 淺紅色 */
+  opacity: 0.7; /* 70% 透明度 */
+  z-index: 2;
+  pointer-events: none;
+  animation: pulse-threat 1.5s infinite;
+  box-shadow: 0 0 10px rgba(255, 138, 138, 0.5); /* 加少少光暈 */
+}
+
+@keyframes pulse-threat {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
